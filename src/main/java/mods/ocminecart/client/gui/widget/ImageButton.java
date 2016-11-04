@@ -31,11 +31,11 @@ public class ImageButton extends GuiButton{
         {
            minecraft.renderEngine.bindTexture(this.texture);
            
-           this.field_146123_n = (mx<=this.xPosition+this.width) && (mx>=this.xPosition) && (my<=this.yPosition+this.height) && (my>=this.yPosition);
+           this.hovered = (mx<=this.xPosition+this.width) && (mx>=this.xPosition) && (my<=this.yPosition+this.height) && (my>=this.yPosition);
            
            Tessellator tes = Tessellator.instance;
            
-           double v0 = (this.field_146123_n && this.enabled) ? 0.5 : 0;
+           double v0 = (this.hovered && this.enabled) ? 0.5 : 0;
            double v1 = v0 + 0.5;
            double u0 = (this.toggle) ? 0.5 : 0;
            double u1 =  u0 +((this.isToggleButton) ? 0.5 : 1);

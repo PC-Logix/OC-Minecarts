@@ -3,24 +3,30 @@ package mods.ocminecart.client.gui.widget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.model.pipeline.VertexTransformer;
+import org.lwjgl.opengl.GL11;
 
 public class EnergyBar {
 	public static void drawBar(int posx, int posy, int h, int w,int zlevel, double percent, ResourceLocation bar){
-		Tessellator tes = Tessellator.instance;
-		Minecraft.getMinecraft().renderEngine.bindTexture(bar);
-		
 		RenderHelper.disableStandardItemLighting();
 		
 		percent = (percent > 1) ? 1 : percent;
 		
 		double dw = w * percent;
+
+		Tessellator tes = Tessellator.getInstance();
+		VertexBuffer buffer = tes.getBuffer();
+		Minecraft.getMinecraft().renderEngine.bindTexture(bar);
 		
-		tes.startDrawingQuads();
-		tes.addVertexWithUV(posx + dw, posy + h, zlevel, percent, 1);
-		tes.addVertexWithUV(posx + dw, posy, zlevel, percent, 0);
-		tes.addVertexWithUV(posx, posy, zlevel, 0, 0);
-		tes.addVertexWithUV(posx, posy + h, zlevel, 0, 1);
+		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+		buffer.pos(posx + dw, posy + h, zlevel).tex(percent, 1);
+		buffer.pos(posx + dw, posy, zlevel).tex(percent, 0);
+		buffer.pos(posx, posy, zlevel).tex(0, 0);
+		buffer.pos(posx, posy + h, zlevel).tex(0, 1);
 		tes.draw();
 		
 		RenderHelper.enableStandardItemLighting();

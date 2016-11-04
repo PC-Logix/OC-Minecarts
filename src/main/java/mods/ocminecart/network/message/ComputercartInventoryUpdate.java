@@ -1,17 +1,17 @@
 package mods.ocminecart.network.message;
 
-import cpw.mods.fml.common.network.ByteBufUtils;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
-import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
 import mods.ocminecart.common.minecart.ComputerCart;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class ComputercartInventoryUpdate implements IMessage{
+public class ComputercartInventoryUpdate implements IMessage {
 	
 	int entityid;
 	int dimid;
@@ -22,7 +22,7 @@ public class ComputercartInventoryUpdate implements IMessage{
 	
 	public ComputercartInventoryUpdate(ComputerCart cart, int slot, ItemStack stack){
 		this.entityid = cart.getEntityId();
-		this.dimid = cart.worldObj.provider.dimensionId;
+		this.dimid = cart.worldObj.provider.getDimension();
 		this.slot = slot;
 		this.stack = stack;
 	}
@@ -43,12 +43,12 @@ public class ComputercartInventoryUpdate implements IMessage{
 		ByteBufUtils.writeItemStack(buf, stack);
 	}
 	
-	public static class Handler implements IMessageHandler<ComputercartInventoryUpdate, IMessage>{
+	public static class Handler implements IMessageHandler<ComputercartInventoryUpdate, IMessage> {
 
 		@Override
 		public IMessage onMessage(ComputercartInventoryUpdate message, MessageContext ctx) {
 			World w = Minecraft.getMinecraft().thePlayer.worldObj;
-			if(w != null && w.provider.dimensionId == message.dimid){
+			if(w != null && w.provider.getDimension() == message.dimid){
 				Entity e = w.getEntityByID(message.entityid);
 				if(e != null && (e instanceof ComputerCart)){
 					((ComputerCart)e).compinv.setInventorySlotContents(message.slot, message.stack);

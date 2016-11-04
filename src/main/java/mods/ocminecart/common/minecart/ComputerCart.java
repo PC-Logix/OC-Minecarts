@@ -16,7 +16,7 @@ import li.cil.oc.api.network.*;
 import li.cil.oc.server.agent.Player;
 import mods.ocminecart.OCMinecart;
 import mods.ocminecart.Settings;
-import mods.ocminecart.common.ISyncEntity;
+import mods.ocminecart.network.ISyncEntity;
 import mods.ocminecart.common.Sound;
 import mods.ocminecart.common.blocks.INetRail;
 import mods.ocminecart.common.component.ComputerCartController;

@@ -1,4 +1,4 @@
-package mods.ocminecart.common;
+package mods.ocminecart.network;
 
 import net.minecraft.nbt.NBTTagCompound;
 

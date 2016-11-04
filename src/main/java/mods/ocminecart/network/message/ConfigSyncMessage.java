@@ -1,14 +1,14 @@
 package mods.ocminecart.network.message;
 
-import cpw.mods.fml.common.network.ByteBufUtils;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
-import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
 import mods.ocminecart.common.items.ItemCartRemoteModule;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class ConfigSyncMessage implements IMessage{
+public class ConfigSyncMessage implements IMessage {
 	
 	public NBTTagCompound config = null;
 	
@@ -20,7 +20,7 @@ public class ConfigSyncMessage implements IMessage{
 	
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		config=ByteBufUtils.readTag(buf);
+		config = ByteBufUtils.readTag(buf);
 	}
 
 	@Override
@@ -28,7 +28,7 @@ public class ConfigSyncMessage implements IMessage{
 		ByteBufUtils.writeTag(buf, config);
 	}
 	
-	public static class Handler implements IMessageHandler<ConfigSyncMessage, IMessage>{
+	public static class Handler implements IMessageHandler<ConfigSyncMessage, IMessage> {
 
 		@Override
 		public IMessage onMessage(ConfigSyncMessage msg, MessageContext ctx) {

@@ -48,10 +48,10 @@ public class ItemUseMessage implements IMessage {
 			Entity p= Minecraft.getMinecraft().theWorld.getEntityByID(message.pentid);
 			if(!(p instanceof EntityPlayer)) return null;
 			switch(message.id){
-			case 0:
-				((ItemCartRemoteModule)ModItems.item_CartRemoteModule).onMPUsage((EntityPlayer)p, message.data);
-			case 1:
-				((ItemRemoteAnalyzer)ModItems.item_CartRemoteAnalyzer).onMPUsage((EntityPlayer)p, message.data);
+				case 0:
+					((ItemCartRemoteModule)ModItems.item_CartRemoteModule).onMPUsage((EntityPlayer)p, message.data);
+				case 1:
+					((ItemRemoteAnalyzer)ModItems.item_CartRemoteAnalyzer).onMPUsage((EntityPlayer)p, message.data);
 			}
 			return null;
 		}

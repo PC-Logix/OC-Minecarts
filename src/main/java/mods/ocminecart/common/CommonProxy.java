@@ -1,8 +1,5 @@
 package mods.ocminecart.common;
 
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.network.NetworkRegistry;
-import cpw.mods.fml.common.registry.EntityRegistry;
 import mods.ocminecart.OCMinecart;
 import mods.ocminecart.common.assemble.AssembleRegister;
 import mods.ocminecart.common.blocks.ModBlocks;
@@ -15,6 +12,9 @@ import mods.ocminecart.common.recipe.Recipes;
 import mods.ocminecart.interaction.railcraft.RailcraftEventHandler;
 import mods.ocminecart.interaction.waila.ModWaila;
 import mods.ocminecart.network.ModNetwork;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.registry.EntityRegistry;
 
 public class CommonProxy {
 	

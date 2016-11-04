@@ -1,17 +1,17 @@
 package mods.ocminecart.network.message;
 
-import cpw.mods.fml.common.network.ByteBufUtils;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
-import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
-import mods.ocminecart.common.ISyncEntity;
+import mods.ocminecart.network.ISyncEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class EntitySyncData implements IMessage{
+public class EntitySyncData implements IMessage {
 	
 	protected int enID;
 	protected int dimId;
@@ -21,7 +21,7 @@ public class EntitySyncData implements IMessage{
 		
 	public EntitySyncData(Entity entity){
 		enID = entity.getEntityId();
-		dimId = entity.worldObj.provider.dimensionId;
+		dimId = entity.worldObj.provider.getDimension();
 		if(entity instanceof ISyncEntity){
 			nbt = new NBTTagCompound();
 			((ISyncEntity) entity).writeSyncData(nbt);
@@ -43,13 +43,13 @@ public class EntitySyncData implements IMessage{
 		ByteBufUtils.writeTag(buf, nbt);
 	}
 		
-	public static class Handler implements IMessageHandler<EntitySyncData, IMessage>{
+	public static class Handler implements IMessageHandler<EntitySyncData, IMessage> {
 
 		@Override
 		public IMessage onMessage(EntitySyncData message, MessageContext ctx) {
 			if(message.nbt != null){	//If the nbt is null then the entity is not syncable and we dosn't need to handle this
 				World world = Minecraft.getMinecraft().thePlayer.worldObj;
-				if(world != null && world.provider.dimensionId == message.dimId){ // just to make sure that the player has not moved to an other dimension
+				if(world != null && world.provider.getDimension() == message.dimId){ // just to make sure that the player has not moved to an other dimension
 					Entity entity = world.getEntityByID(message.enID);
 					if(entity != null && (entity instanceof ISyncEntity)){
 						((ISyncEntity) entity).readSyncData(message.nbt);

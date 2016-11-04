@@ -1,14 +1,15 @@
 package mods.ocminecart.client.gui.widget;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 public abstract class ComponentSlot extends Slot{
 	
@@ -22,10 +23,10 @@ public abstract class ComponentSlot extends Slot{
 		this.container = container;
 		this.player = player;
 	}
-	
-	@SideOnly(Side.CLIENT)
-	public boolean func_111238_b(){
-		return slot!= li.cil.oc.api.driver.item.Slot.None && super.func_111238_b() && tier!=-1;
+
+	@Override
+	public boolean canBeHovered() {
+		return !slot.equals(li.cil.oc.api.driver.item.Slot.None) && super.canBeHovered() && tier!=-1;
 	}
 	
 	public boolean isItemValid(ItemStack stack){
@@ -34,10 +35,8 @@ public abstract class ComponentSlot extends Slot{
 	
 	public void onPickupFromSlot(EntityPlayer player, ItemStack stack){
 		super.onPickupFromSlot(player, stack);
-		Iterator slots = container.inventorySlots.iterator();
-		while(slots.hasNext()){
-			Slot slot = (Slot) slots.next();
-			if(slot instanceof ComponentSlot){
+		for (Object slot : container.inventorySlots) {
+			if (slot instanceof ComponentSlot) {
 				((ComponentSlot) slot).clearIfInvalid(player);
 			}
 		}
@@ -45,10 +44,8 @@ public abstract class ComponentSlot extends Slot{
 	
 	public void onSlotChanged(){
 		super.onSlotChanged();
-		Iterator slots = container.inventorySlots.iterator();
-		while(slots.hasNext()){
-			Slot slot = (Slot) slots.next();
-			if(slot instanceof ComponentSlot){
+		for (Object slot : container.inventorySlots) {
+			if (slot instanceof ComponentSlot) {
 				((ComponentSlot) slot).clearIfInvalid(player);
 			}
 		}

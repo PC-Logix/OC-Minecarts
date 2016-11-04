@@ -1,12 +1,5 @@
 package mods.ocminecart.common;
 
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent.ItemCraftedEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.ServerTickEvent;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import mods.ocminecart.Settings;
 import mods.ocminecart.client.SlotIcons;
 import mods.ocminecart.common.entityextend.RemoteExtenderRegister;
@@ -22,8 +15,13 @@ import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.event.entity.player.EntityInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 
 public class EventHandler {
@@ -33,25 +31,19 @@ public class EventHandler {
 	public static void initHandler(){
 		EventHandler handler = new EventHandler();
 		MinecraftForge.EVENT_BUS.register(handler);
-		FMLCommonHandler.instance().bus().register(handler);
 	}
 	
 	@SubscribeEvent
 	@SideOnly(Side.CLIENT)
 	public void onItemIconRegister(TextureStitchEvent event) {
-		if(event.map.getTextureType()==1) SlotIcons.register(event.map);
+		if(event.getMap().getTextureType()==1) SlotIcons.register(event.getMap());
 	}
 	
 	@SubscribeEvent
-	public void onItemCraft(ItemCraftedEvent event){
-		CraftingHandler.onCraftingEvent(event);
-	}
-	
-	@SubscribeEvent
-	public void onEntityClick(EntityInteractEvent event) {
-		ItemStack stack = event.entityPlayer.inventory.getCurrentItem();
+	public void onEntityClick(PlayerInteractEvent.EntityInteract event) {
+		ItemStack stack = event.getEntityPlayer().inventory.getCurrentItem();
 		if(stack!=null && stack.getItem() instanceof ItemEntityInteract){
-			if(((ItemEntityInteract) stack.getItem()).onEntityClick(event.entityPlayer, event.target,
+			if(((ItemEntityInteract) stack.getItem()).onEntityClick(event.getEntityPlayer(), event.getTarget(),
 					stack, ItemEntityInteract.Type.RIGHT_CLICK))
 				event.setCanceled(true);
 		}
@@ -76,15 +68,13 @@ public class EventHandler {
 	}
 	
 	@SubscribeEvent
-	public void onServerTick(ServerTickEvent event){
-		ticks++;
-		if(ticks<2) return;
-		ticks=0;
+	public void onServerTick(TickEvent.ServerTickEvent event){
+		if(event.phase == TickEvent.Phase.START) return;
 		RemoteExtenderRegister.serverTick();
 	}
 	
 	@SubscribeEvent
-	public void onPlayerLogin(PlayerLoggedInEvent event){
+	public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event){
 		NBTTagCompound config = new NBTTagCompound();
 		config.setIntArray("remoterange", Settings.RemoteRange);
 		ModNetwork.channel.sendTo(new ConfigSyncMessage(config), (EntityPlayerMP)event.player);
@@ -92,13 +82,13 @@ public class EventHandler {
 	
 	@SubscribeEvent
 	public void onWorldUnload(WorldEvent.Unload event){
-		if(event.world.isRemote) return;
+		if(event.getWorld().isRemote && event.getWorld().provider.getDimension()==0) return;
 		RemoteExtenderRegister.reinit();
 	}
 	
 	@SubscribeEvent
 	public void onWorldLoad(WorldEvent.Load event){
-		if(event.world.isRemote) return;
+		if(event.getWorld().isRemote && event.getWorld().provider.getDimension()==0) return;
 		RemoteExtenderRegister.reinit();
 	}
 }
