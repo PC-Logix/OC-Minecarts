@@ -36,7 +36,7 @@ public class EventHandler {
 	@SubscribeEvent
 	@SideOnly(Side.CLIENT)
 	public void onItemIconRegister(TextureStitchEvent event) {
-		if(event.getMap().getTextureType()==1) SlotIcons.register(event.getMap());
+		SlotIcons.register(event.getMap());
 	}
 	
 	@SubscribeEvent

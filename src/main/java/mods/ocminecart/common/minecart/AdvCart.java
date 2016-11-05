@@ -1,12 +1,8 @@
 package mods.ocminecart.common.minecart;
 
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.Optional;
 import mods.ocminecart.Settings;
 import mods.ocminecart.common.util.BitUtil;
 import mods.railcraft.api.carts.IEnergyTransfer;
-import mods.railcraft.api.electricity.IElectricMinecart;
 import mods.railcraft.client.emblems.EmblemToolsClient;
 import mods.railcraft.common.emblems.EmblemToolsServer;
 import net.minecraft.block.Block;
@@ -14,11 +10,12 @@ import net.minecraft.block.BlockRailBase;
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.Optional;
 
 //Is the Base for a solid, self powered cart with a brake.
 //Later I will add the Railcraft integration here
@@ -33,12 +30,10 @@ public abstract class AdvCart extends EntityMinecart implements IEnergyTransfer,
 	public AdvCart(World p_i1713_1_, double p_i1713_2_, double p_i1713_4_,
 			double p_i1713_6_) {
 		super(p_i1713_1_, p_i1713_2_, p_i1713_4_, p_i1713_6_);
-		this.setDisplayTileData(0);
 	}
 
 	public AdvCart(World p_i1713_1) {
 		super(p_i1713_1);
-		this.setDisplayTileData(0);
 	}
 
 	protected void entityInit() {
@@ -47,7 +42,7 @@ public abstract class AdvCart extends EntityMinecart implements IEnergyTransfer,
 		if(Loader.isModLoaded("Railcraft") && FMLCommonHandler.instance().getEffectiveSide().isServer())
 			charge = new ChargeHandler(this, ChargeHandler.Type.USER, Settings.ComputerCartETrackBuf, Settings.ComputerCartETrackLoss);
 		
-		this.dataWatcher.addObject(3, (byte)0); // Booleans (is Locked, Brake enabled)
+		this.getDataManager()..addObject(3, (byte)0); // Booleans (is Locked, Brake enabled)
 		this.dataWatcher.addObject(4, 0.0F);  //Engine speed
 		this.dataWatcher.addObject(5, "");	//Emblem id [Railcraft]
 		// Free DataWatcher 6-16, 23-32

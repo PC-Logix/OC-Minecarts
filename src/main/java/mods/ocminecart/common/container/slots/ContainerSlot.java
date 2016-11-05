@@ -1,16 +1,13 @@
 package mods.ocminecart.common.container.slots;
-
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.driver.Item;
 import li.cil.oc.api.driver.item.Container;
 import li.cil.oc.common.Tier;
 import mods.ocminecart.client.SlotIcons;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.IIcon;
 
 public class ContainerSlot extends Slot{
 	
@@ -36,8 +33,8 @@ public class ContainerSlot extends Slot{
 			this.type = li.cil.oc.api.driver.item.Slot.None;
 		}
 	}
-	
-	 public IIcon getBackgroundIconIndex(){
+
+	public TextureAtlasSprite getBackgroundSprite(){
 		 return SlotIcons.fromTier(this.tier);
 	 }
 	 
@@ -56,9 +53,9 @@ public class ContainerSlot extends Slot{
 		
 		return false;
 	}
-	
-	@SideOnly(Side.CLIENT)
-	public boolean func_111238_b(){
+
+	@Override
+	public boolean canBeHovered() {
 		return type != li.cil.oc.api.driver.item.Slot.None && tier != Tier.None();
 	}
 

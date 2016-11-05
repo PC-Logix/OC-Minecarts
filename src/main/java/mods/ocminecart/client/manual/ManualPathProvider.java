@@ -7,6 +7,7 @@ import mods.ocminecart.common.items.ModItems;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ManualPathProvider implements PathProvider{
@@ -28,9 +29,8 @@ public class ManualPathProvider implements PathProvider{
 	}
 
 	@Override
-	public String pathFor(World world, int x, int y, int z) {
-		Block block = world.getBlock(x,y,z);
-		if(block==null) return null;
+	public String pathFor(World world, BlockPos pos) {
+		Block block = world.getBlockState(pos).getBlock();
 		
 		if(block == ModBlocks.block_NetworkRailBase) return PATH_PREFIX+"block/netrailbase.md";
 		else if(block == ModBlocks.block_NetworkRail) return PATH_PREFIX+"block/netrail.md";

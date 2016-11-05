@@ -4,7 +4,9 @@ import li.cil.oc.api.network.Environment;
 import mods.ocminecart.OCMinecart;
 import mods.ocminecart.common.tileentity.NetworkRailBaseTile;
 import net.minecraft.block.BlockRailBase;
+import net.minecraft.block.properties.IProperty;
 import net.minecraft.entity.item.EntityMinecart;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
@@ -12,27 +14,23 @@ public class NetworkRail extends BlockRailBase implements INetRail{
 
 	protected NetworkRail() {
 		super(false);
-		this.setBlockTextureName(OCMinecart.MODID+":netrail");
-		this.setBlockName(OCMinecart.MODID+".networkrail");
+		this.setUnlocalizedName(OCMinecart.MODID+".networkrail");
 		this.setHardness(0.7F);
-	}
-	
-	public boolean isFlexibleRail(IBlockAccess world, int y, int x, int z){
-		return false;
-	}
-	
-	public boolean canMakeSlopes(IBlockAccess world, int x, int y, int z){
-		return false;
 	}
 
 	@Override
-	public Environment getResponseEnvironment(World world, int x, int y, int z) {
-		if(world.getTileEntity(x, y-1, z) instanceof NetworkRailBaseTile) return ((NetworkRailBaseTile) world.getTileEntity(x, y-1, z)).getRailPlug();
+	public Environment getResponseEnvironment(World world, BlockPos pos) {
+		if(world.getTileEntity(pos.add(0,1,0)) instanceof NetworkRailBaseTile) return ((NetworkRailBaseTile) world.getTileEntity(pos.add(0,1,0))).getRailPlug();
 		return null;
 	}
 
 	@Override
-	public boolean isValid(World world, int x, int y, int z, EntityMinecart cart) {
-		return (cart instanceof Environment) && cart.getDistance(x+0.5, y+0.5, z+0.5)<0.5 && cart.worldObj == world;
+	public boolean isValid(World world, BlockPos pos, EntityMinecart cart) {
+		return (cart instanceof Environment) && cart.getDistance(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) < 0.5 && cart.worldObj == world;
+	}
+
+	@Override
+	public IProperty<EnumRailDirection> getShapeProperty() {
+		return null; //TODO: Find out how this works
 	}
 }

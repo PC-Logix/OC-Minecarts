@@ -1,17 +1,17 @@
 package mods.ocminecart.network.message;
 
-import cpw.mods.fml.common.network.ByteBufUtils;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
-import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import io.netty.buffer.ByteBuf;
 import mods.ocminecart.common.items.ItemCartRemoteModule;
 import mods.ocminecart.common.items.ItemRemoteAnalyzer;
 import mods.ocminecart.common.items.ModItems;
+import mods.ocminecart.network.SynchronizedMessageHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class ItemUseMessage implements IMessage {
 	
@@ -41,19 +41,18 @@ public class ItemUseMessage implements IMessage {
 		ByteBufUtils.writeTag(buf, this.data);
 	}
 	
-	public static class Handler implements IMessageHandler<ItemUseMessage, IMessage>{
+	public static class Handler extends SynchronizedMessageHandler<ItemUseMessage> {
 
 		@Override
-		public IMessage onMessage(ItemUseMessage message, MessageContext ctx) {
+		protected void handleMessage(ItemUseMessage message, MessageContext ctx) {
 			Entity p= Minecraft.getMinecraft().theWorld.getEntityByID(message.pentid);
-			if(!(p instanceof EntityPlayer)) return null;
+			if(!(p instanceof EntityPlayer)) return;
 			switch(message.id){
 				case 0:
 					((ItemCartRemoteModule)ModItems.item_CartRemoteModule).onMPUsage((EntityPlayer)p, message.data);
 				case 1:
 					((ItemRemoteAnalyzer)ModItems.item_CartRemoteAnalyzer).onMPUsage((EntityPlayer)p, message.data);
 			}
-			return null;
 		}
 	}
 

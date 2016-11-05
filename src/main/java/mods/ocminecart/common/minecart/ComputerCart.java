@@ -1,7 +1,5 @@
 package mods.ocminecart.common.minecart;
 
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Loader;
 import li.cil.oc.api.API;
 import li.cil.oc.api.Manual;
 import li.cil.oc.api.driver.Item;
@@ -33,6 +31,7 @@ import mods.ocminecart.network.ModNetwork;
 import mods.ocminecart.network.message.ComputercartInventoryUpdate;
 import mods.ocminecart.network.message.EntitySyncRequest;
 import mods.ocminecart.network.message.UpdateRunning;
+import net.minecraft.client.renderer.EnumFaceDirection;
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -40,16 +39,19 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidTank;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -381,14 +383,14 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 		ItemUtil.dropItemList(drop, this.worldObj, this.posX, this.posY, this.posZ,true);
 		this.setDamage(Float.MAX_VALUE); //Sometimes the cart stay alive this should fix it.
 	}
-	
+
 	@Override
-	public boolean interactFirst(EntityPlayer p){
+	public EnumActionResult applyPlayerInteraction(EntityPlayer p, Vec3d vec, @Nullable ItemStack stack, EnumHand hand) {
 		ItemStack refMan = API.items.get("manual").createItemStack(1);
-		boolean openwiki = p.getHeldItem()!=null && p.isSneaking() && p.getHeldItem().getItem() == refMan.getItem() && p.getHeldItem().getItemDamage() == refMan.getItemDamage();
-		
-		if(Loader.isModLoaded("Railcraft") && RailcraftUtils.isUsingChrowbar(p)) return true;
-		
+		boolean openwiki = stack!=null && p.isSneaking() && stack.getItem() == refMan.getItem() && stack.getItemDamage() == refMan.getItemDamage();
+
+		if(RailcraftUtils.isUsingChrowbar(p)) return EnumActionResult.PASS;
+
 		if(this.worldObj.isRemote && openwiki){
 			Manual.navigate(OCMinecart.MODID+"/%LANGUAGE%/item/cart.md");
 			Manual.openFor(p);
@@ -397,9 +399,9 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 			p.openGui(OCMinecart.instance, 1, this.worldObj, this.getEntityId(), -10, 0);
 		}
 		else if(this.worldObj.isRemote && !openwiki){
-			p.swingItem();
+			p.swingArm(hand);
 		}
-		return true;
+		return EnumActionResult.SUCCESS;
 	}
 	
 	@Override
@@ -622,18 +624,18 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 	}
 
 	@Override
-	public ForgeDirection facing() {
-		ForgeDirection res = RotationHelper.directionFromYaw(this.rotationYaw-90D); //Minecarts seem to look at the right side
+	public EnumFacing facing() {
+		EnumFacing res = RotationHelper.directionFromYaw(this.rotationYaw-90D); //Minecarts seem to look at the right side
 		return res;
 	}
 
 	@Override
-	public ForgeDirection toGlobal(ForgeDirection value) {
+	public EnumFacing toGlobal(EnumFacing value) {
 		return RotationHelper.calcGlobalDirection(value, this.facing());
 	}
 
 	@Override
-	public ForgeDirection toLocal(ForgeDirection value) {
+	public EnumFacing toLocal(EnumFacing value) {
 		return RotationHelper.calcLocalDirection(value, this.facing());
 	}
 
@@ -736,12 +738,12 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 	}
 	
 	@Override
-	public int fill(ForgeDirection from, FluidStack resource, boolean doFill) {
+	public int fill(EnumFaceDirection from, FluidStack resource, boolean doFill) {
 		return 0;
 	}
 
 	@Override
-	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
+	public FluidStack drain(numFaceDirectionfrom, FluidStack resource, boolean doDrain) {
 		return null;
 	}
 
