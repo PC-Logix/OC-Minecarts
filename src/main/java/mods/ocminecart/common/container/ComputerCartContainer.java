@@ -130,7 +130,7 @@ public class ComputerCartContainer extends Container {
 	
 	private List<Integer> getPlayerInvSlots(ItemStack stack, EntityPlayer player){
 		ArrayList<Integer> slots = new ArrayList<Integer>();
-		for(Slot slot : (List<Slot>)this.inventorySlots){
+		for(Slot slot : this.inventorySlots){
 			if(slot.inventory.equals(player.inventory)){
 				slots.add(slot.slotNumber);
 			}

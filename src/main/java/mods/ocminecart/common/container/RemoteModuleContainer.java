@@ -1,20 +1,20 @@
 package mods.ocminecart.common.container;
 
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import mods.ocminecart.common.entityextend.RemoteCartExtender;
 import mods.ocminecart.common.entityextend.RemoteExtenderRegister;
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.ICrafting;
+import net.minecraft.inventory.IContainerListener;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.ArrayList;
 
 public class RemoteModuleContainer extends Container{
 	
-	protected final boolean IS_SERVER = FMLCommonHandler.instance().getEffectiveSide().isServer(); 
+	protected final boolean IS_SERVER = FMLCommonHandler.instance().getEffectiveSide().isServer();
 	private RemoteCartExtender module;
 	private EntityMinecart cart;
 	
@@ -60,41 +60,39 @@ public class RemoteModuleContainer extends Container{
 	public void detectAndSendChanges()
     {
         super.detectAndSendChanges();
-        
-        for(int i=0;i<this.crafters.size();i+=1){
-        	ICrafting craft = (ICrafting) this.crafters.get(i);
-        	
+
+		for(IContainerListener listener : listeners){
         	if(this.module.isLocked()!=this.locked){
-        		craft.sendProgressBarUpdate(this, 2, (module.isLocked())? 1:0);
+        		listener.sendProgressBarUpdate(this, 2, (module.isLocked())? 1:0);
         	}
         }
         
         this.locked = this.module.isLocked();
     }
-	
-	public void addCraftingToCrafters(ICrafting craft){
-		 super.addCraftingToCrafters(craft);
-		 if(!IS_SERVER) return;
-		 craft.sendProgressBarUpdate(this, 0, 0);
-		 if(craft instanceof EntityPlayer)
-			 craft.sendProgressBarUpdate(this, 1, module.editableByPlayer((EntityPlayer) craft, true) ? 1:0);
-		 else
-			 craft.sendProgressBarUpdate(this, 1, 0);
-		 craft.sendProgressBarUpdate(this, 2, (module.isLocked())? 1:0);
+
+	@Override
+	public void addListener(IContainerListener listener) {
+		super.addListener(listener);
+		if(!IS_SERVER) return;
+		listener.sendProgressBarUpdate(this, 0, 0);
+		if(listener instanceof EntityPlayer)
+			listener.sendProgressBarUpdate(this, 1, module.editableByPlayer((EntityPlayer) listener, true) ? 1:0);
+		else
+			listener.sendProgressBarUpdate(this, 1, 0);
+		listener.sendProgressBarUpdate(this, 2, (module.isLocked())? 1:0);
 	}
 	
 	public void sendPassState(EntityPlayer p, int i){
-		if(p instanceof ICrafting){
-			((ICrafting)p).sendProgressBarUpdate(this, 0, i);
+		if(p instanceof IContainerListener){
+			((IContainerListener)p).sendProgressBarUpdate(this, 0, i);
 		}
 	}
 	
 	public void lockGui(){
-		 for(int i=0;i<this.crafters.size();i+=1){
-	        ICrafting craft = (ICrafting) this.crafters.get(i);
-	        if(!(craft instanceof EntityPlayer)) continue;
-	        if(!module.editableByPlayer((EntityPlayer) craft, false)){
-	        	this.toBan.add((EntityPlayer) craft);
+		 for(IContainerListener listener : listeners){
+	        if(!(listener instanceof EntityPlayer)) continue;
+	        if(!module.editableByPlayer((EntityPlayer) listener, false)){
+	        	this.toBan.add((EntityPlayer) listener);
 	        }
 	     }
 	}

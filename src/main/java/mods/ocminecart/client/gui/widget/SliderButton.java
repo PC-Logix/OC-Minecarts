@@ -4,7 +4,10 @@ import mods.ocminecart.Settings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.opengl.GL11;
 
 public class SliderButton {
 	
@@ -33,19 +36,20 @@ public class SliderButton {
 	
 	public void drawSlider(float zLevel ,boolean highlight){
 		
-		Tessellator tes = Tessellator.instance;
+		Tessellator tes = Tessellator.getInstance();
+		VertexBuffer buffer = tes.getBuffer();
 		
 		double v0 = (highlight) ? 0.5 : 0;
 		double v1 = v0 + 0.5;
 		
 		Minecraft.getMinecraft().renderEngine.bindTexture(texture);
 		RenderHelper.disableStandardItemLighting();
-		
-		tes.startDrawingQuads();
-		tes.addVertexWithUV(posx + w, posy + h + slidery, zLevel, 1, v1);
-		tes.addVertexWithUV(posx + w, posy + slidery, zLevel, 1, v0);
-		tes.addVertexWithUV(posx, posy + slidery, zLevel, 0, v0);
-		tes.addVertexWithUV(posx, posy + h + slidery, zLevel, 0, v1);
+
+		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+		buffer.pos(posx + w, posy + h + slidery, zLevel).tex(1, v1);
+		buffer.pos(posx + w, posy + slidery, zLevel).tex( 1, v0);
+		buffer.pos(posx, posy + slidery, zLevel).tex( 0, v0);
+		buffer.pos(posx, posy + h + slidery, zLevel).tex( 0, v1);
 		tes.draw();
 	
 		RenderHelper.enableStandardItemLighting();

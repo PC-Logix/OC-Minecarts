@@ -3,7 +3,10 @@ package mods.ocminecart.client.gui.widget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.opengl.GL11;
 
 public class ImageButton extends GuiButton{
 	
@@ -29,28 +32,29 @@ public class ImageButton extends GuiButton{
     {
         if (this.visible)
         {
-           minecraft.renderEngine.bindTexture(this.texture);
+            minecraft.renderEngine.bindTexture(this.texture);
            
-           this.hovered = (mx<=this.xPosition+this.width) && (mx>=this.xPosition) && (my<=this.yPosition+this.height) && (my>=this.yPosition);
+            this.hovered = (mx<=this.xPosition+this.width) && (mx>=this.xPosition) && (my<=this.yPosition+this.height) && (my>=this.yPosition);
+
+            Tessellator tes = Tessellator.getInstance();
+            VertexBuffer buffer = tes.getBuffer();
            
-           Tessellator tes = Tessellator.instance;
+            double v0 = (this.hovered && this.enabled) ? 0.5 : 0;
+            double v1 = v0 + 0.5;
+            double u0 = (this.toggle) ? 0.5 : 0;
+            double u1 =  u0 +((this.isToggleButton) ? 0.5 : 1);
            
-           double v0 = (this.hovered && this.enabled) ? 0.5 : 0;
-           double v1 = v0 + 0.5;
-           double u0 = (this.toggle) ? 0.5 : 0;
-           double u1 =  u0 +((this.isToggleButton) ? 0.5 : 1);
+            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+            buffer.pos(this.xPosition, this.yPosition + this.height, this.zLevel).tex(u0, v1);
+            buffer.pos(this.xPosition + this.width, this.yPosition + this.height , this.zLevel).tex(u1, v1);
+            buffer.pos(this.xPosition + this.width, this.yPosition , this.zLevel).tex(u1, v0);
+            buffer.pos(this.xPosition, this.yPosition , this.zLevel).tex(u0, v0);
+            tes.draw();
            
-           tes.startDrawingQuads();
-           tes.addVertexWithUV(this.xPosition, this.yPosition + this.height, this.zLevel , u0, v1);
-           tes.addVertexWithUV(this.xPosition + this.width, this.yPosition + this.height , this.zLevel , u1, v1);
-           tes.addVertexWithUV(this.xPosition + this.width, this.yPosition , this.zLevel , u1, v0);
-           tes.addVertexWithUV(this.xPosition, this.yPosition , this.zLevel , u0, v0);
-           tes.draw();
-           
-           if(this.displayString!=null && this.displayString!=""){
-        	   int color = (!this.enabled) ? 0xA0A0A0 : ((this.field_146123_n) ? 0xFFFFA0 : 0xE0E0E0);
-        	   this.drawCenteredString(minecraft.fontRenderer, this.displayString, this.xPosition+this.width/2, this.yPosition+(this.height-8)/2, color);
-           }
+            if(this.displayString!=null && this.displayString!=""){
+        	   int color = (!this.enabled) ? 0xA0A0A0 : ((this.isMouseOver()) ? 0xFFFFA0 : 0xE0E0E0);
+        	   this.drawCenteredString(minecraft.fontRendererObj, this.displayString, this.xPosition+this.width/2, this.yPosition+(this.height-8)/2, color);
+            }
         }
     }
 	

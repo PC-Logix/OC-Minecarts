@@ -66,7 +66,20 @@ public class RomCrafting implements IRecipe{
 		}
 		return null;
 	}
-	
+
+	@Override
+	public ItemStack[] getRemainingItems(InventoryCrafting inv) {
+		int romPos = findRom(inv);
+		if(romPos != -1) {
+			ItemStack romStack = inv.getStackInSlot(romPos);
+			if(romStack!=null)
+			{
+				return new ItemStack[]{romStack.copy()};
+			}
+		}
+		return new ItemStack[0];
+	}
+
 	private int findRom(InventoryCrafting grid){
 		int size = grid.getSizeInventory();
 		for(int i=0; i<size; i+=1){

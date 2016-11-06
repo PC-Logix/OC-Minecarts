@@ -5,7 +5,6 @@ import mods.ocminecart.common.items.ModItems;
 import mods.ocminecart.common.util.ComputerCartData;
 import mods.railcraft.api.core.items.IToolCrowbar;
 import mods.railcraft.common.emblems.EmblemToolsServer;
-import mods.railcraft.common.emblems.ItemEmblem;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
@@ -49,14 +48,20 @@ public class EmblemCrafting implements IRecipe {
 	public ItemStack getRecipeOutput() {
 		return new ItemStack(ModItems.item_ComputerCart,1);
 	}
-	
+
+	@Override
+	public ItemStack[] getRemainingItems(InventoryCrafting inv) {
+		return new ItemStack[0];
+	}
+
 	private int findEmblem(InventoryCrafting grid){
+		/* TODO
 		int size = grid.getSizeInventory();
 		for(int i=0; i<size; i+=1){
 			ItemStack stack = grid.getStackInSlot(i);
-			if(stack!=null && stack.getItem() == ItemEmblem.item)
+			if(stack!=null && stack.getItem() == Emblem.item)
 				return i;
-		}
+		}*/
 		return -1;
 	}
 	

@@ -4,7 +4,6 @@ import codechicken.lib.vec.Rectangle4i;
 import codechicken.nei.ItemPanel;
 import codechicken.nei.LayoutManager;
 import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.Optional;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.client.KeyBindings;
@@ -14,14 +13,12 @@ import mods.ocminecart.OCMinecart;
 import mods.ocminecart.Settings;
 import mods.ocminecart.client.SlotIcons;
 import mods.ocminecart.client.gui.widget.EnergyBar;
-import mods.ocminecart.client.gui.widget.GuiUtil;
 import mods.ocminecart.client.gui.widget.ImageButton;
 import mods.ocminecart.client.gui.widget.SliderButton;
 import mods.ocminecart.common.container.ComputerCartContainer;
 import mods.ocminecart.common.container.slots.ContainerSlot;
 import mods.ocminecart.common.inventory.ComponetInventory;
 import mods.ocminecart.common.minecart.ComputerCart;
-import mods.ocminecart.interaction.NEI;
 import mods.ocminecart.network.ModNetwork;
 import mods.ocminecart.network.message.GuiButtonClick;
 import net.minecraft.client.Minecraft;
@@ -38,6 +35,7 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
+import net.minecraftforge.fml.client.config.GuiUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -170,7 +168,7 @@ public class ComputerCartGui extends GuiContainer {
         	this.drawSelection();
         
         //Tooltips
-        if(this.func_146978_c(this.btPower.xPosition, this.btPower.yPosition, 18, 18, mx+this.guiLeft, my+this.guiTop)){
+        if(this.isPointInRegion(this.btPower.xPosition, this.btPower.yPosition, 18, 18, mx+this.guiLeft, my+this.guiTop)){
         	List<String> ls = new ArrayList<String>();
         	if(this.container.getEntity().getRunning()){
         		 ls.add(StatCollector.translateToLocal("tooltip."+OCMinecart.MODID+".gui.turnoff"));
@@ -179,13 +177,13 @@ public class ComputerCartGui extends GuiContainer {
         		ls.add(StatCollector.translateToLocal("tooltip."+OCMinecart.MODID+".gui.turnon"));
         		ls.add(EnumChatFormatting.GRAY + StatCollector.translateToLocal("tooltip."+OCMinecart.MODID+".gui.useanalyzer"));
         	}
-            GuiUtil.drawHoverText(ls, mx - this.guiLeft, my - this.guiTop,  this.width, this.height, this.guiLeft, Minecraft.getMinecraft().fontRenderer);
+			GuiUtils.drawHoveringText(ls, mx - this.guiLeft, my - this.guiTop,  this.width, this.height, this.guiLeft, Minecraft.getMinecraft().fontRendererObj);
         }
         if(this.func_146978_c(26+this.guiLeft, 8+this.guiTop+offset, 140, 12, mx+this.guiLeft, my+this.guiTop)){
         	List<String> ls = new ArrayList<String>();
         	int per = (int)(((double)this.container.sEnergy / (double)this.container.smaxEnergy)*100);
         	ls.add("Energy: "+per+"% ("+this.container.sEnergy+" / "+this.container.smaxEnergy+")");
-        	GuiUtil.drawHoverText(ls, mx - this.guiLeft, my - this.guiTop, this.width, this.height, this.guiLeft, Minecraft.getMinecraft().fontRenderer);
+        	GuiUtils.drawHoveringText(ls, mx - this.guiLeft, my - this.guiTop, this.width, this.height, this.guiLeft, Minecraft.getMinecraft().fontRendererObj);
         }
         
         GL11.glPopAttrib();

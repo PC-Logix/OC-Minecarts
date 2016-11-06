@@ -1,32 +1,19 @@
 package mods.ocminecart.common.tileentity;
 
-import appeng.api.movable.IMovableTile;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Optional;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.network.*;
-import mods.ocminecart.OCMinecart;
 import mods.ocminecart.Settings;
 import mods.ocminecart.common.util.IPlugable;
 import mods.ocminecart.common.util.Plug;
-import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.ISidedInventory;
-import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.NetworkManager;
-import net.minecraft.network.Packet;
-import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.IIcon;
-import net.minecraft.util.StatCollector;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ITickable;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
-@Optional.Interface(iface="appeng.api.movable.IMovableTile", modid="appliedenergistics2", striprefs=true)
-public class NetworkRailBaseTile extends TileEntity implements ISidedInventory, SidedEnvironment, IPlugable, Analyzable, IMovableTile{
+public class NetworkRailBaseTile extends TileEntity implements ITickable,SidedEnvironment, IPlugable, Analyzable{
 	
 	
 	private Plug rail;	//Environment for the Cart
@@ -36,8 +23,6 @@ public class NetworkRailBaseTile extends TileEntity implements ISidedInventory, 
 	
 	private ItemStack camoItem = null;
 	private ItemStack camoItemOld = null;
-
-	private IIcon camoTop = null;
 	
 	/*
 	 * 0 = Connect: Network,Power
@@ -73,7 +58,7 @@ public class NetworkRailBaseTile extends TileEntity implements ISidedInventory, 
 		this.markDirty();
 	}
 		
-	public void writeToNBT(NBTTagCompound nbt){
+	public NBTTagCompound writeToNBT(NBTTagCompound nbt){
 		super.writeToNBT(nbt);
 		nbt.setInteger("conMode", Mode);
 		
@@ -91,40 +76,11 @@ public class NetworkRailBaseTile extends TileEntity implements ISidedInventory, 
 		NBTTagCompound item = new NBTTagCompound();
 		if(camoItem!=null)camoItem.writeToNBT(item);
 		nbt.setTag("CamoItem",item);
+		return nbt;
 	}
-	
-	   @Override
-	   public Packet getDescriptionPacket()
-	   {
-	       NBTTagCompound syncData = new NBTTagCompound();
-	       this.writeSyncableDataToNBT(syncData);
-	       return new S35PacketUpdateTileEntity(this.xCoord, this.yCoord, this.zCoord, 1, syncData);
-	   }
-	   
-	   @Override
-	   public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt)
-	   {
-	       readSyncableDataFromNBT(pkt.func_148857_g());
-	   }
-	
-	private void writeSyncableDataToNBT(NBTTagCompound syncData){
-		NBTTagCompound item = new NBTTagCompound();
-		if(camoItem!=null)camoItem.writeToNBT(item);
-		syncData.setTag("CamoItem",item);
-	}
-	
-	private void readSyncableDataFromNBT(NBTTagCompound syncData) {
-		camoItem=ItemStack.loadItemStackFromNBT((NBTTagCompound) syncData.getTag("CamoItem"));
-		if(camoItem !=camoItemOld) updateCamo();
-	}
-	
-	private void forcesync(){
-		this.worldObj.markBlockForUpdate(this.xCoord, this.yCoord, this.zCoord);
-		this.markDirty();
-	}
-	
-	public void updateEntity(){
-		super.updateEntity();
+
+	@Override
+	public void update(){
 		if (!this.worldObj.isRemote && !this.moving) {
 			if(firstupdate){
 				Network.joinOrCreateNetwork(this);
@@ -151,21 +107,6 @@ public class NetworkRailBaseTile extends TileEntity implements ISidedInventory, 
 	/*------END-NBT/Sync------*/
 	
 	/*------Tile-Update-------*/
-	
-	private void updateCamo(){
-		if(this.worldObj.isRemote){
-			camoItemOld=(camoItem!=null) ? camoItem.copy() : null;
-			if(camoItem!=null){
-				if(camoItem.getItem() instanceof ItemBlock){
-					Block block=Block.getBlockFromItem(camoItem.getItem());
-					camoTop=block.getIcon(ForgeDirection.UP.ordinal(), camoItem.getItem().getMetadata(camoItem.getItemDamage()));
-				}
-				else camoTop=null;
-			}	
-			else camoTop=null;
-			this.worldObj.markBlockForUpdate(this.xCoord, this.yCoord, this.zCoord);
-		}
-	}
 	 
 	public void onChunkUnload() {
 		 super.onChunkUnload();
@@ -189,104 +130,17 @@ public class NetworkRailBaseTile extends TileEntity implements ISidedInventory, 
 	
 	/*-----END-Tile-Update-----*/
 	
-	/*------Inventory-------*/	//way too much code for only one ghost slot ;)
-	public int getSizeInventory() {
-		return 1;
-	}
-
-	public ItemStack getStackInSlot(int slot) {
-		if(slot==0) return camoItem;
-		return null;
-	}
-	
-	public ItemStack decrStackSize(int slot, int itemnum) {
-		if(camoItem != null && slot == 0){
-			ItemStack stack;
-			
-			if(camoItem.stackSize <= itemnum){
-				stack=camoItem;
-				camoItem=null;
-				this.forcesync();
-				return stack;
-			}
-			else{
-				stack=camoItem.splitStack(itemnum);
-				
-				if(camoItem.stackSize <= 0) camoItem = null;
-				this.forcesync();
-				return stack;
-			}
-		}
-		return null;
-	}
-
-	public ItemStack getStackInSlotOnClosing(int slot) {
-		if(camoItem!=null && slot == 0){
-			ItemStack item = camoItem;
-			camoItem=null;
-			return item;
-		}
-		return null;
-	}
-
-	public void setInventorySlotContents(int slot, ItemStack stack) {
-		if(slot==0 && stack!=null) {
-			camoItem= stack.copy();
-			
-			
-			if(stack.stackSize > this.getInventoryStackLimit()){
-				stack.stackSize = stack.stackSize - this.getInventoryStackLimit();
-			}
-			this.forcesync();
-		}
-	}
-
-	public String getInventoryName() {
-		return StatCollector.translateToLocal("gui."+OCMinecart.MODID+".networkrailbase.title");
-	}
-
-	public boolean hasCustomInventoryName() { return false; }
-
-	public int getInventoryStackLimit() {return 1;}
-
-	public boolean isUseableByPlayer(EntityPlayer player) {
-		return this.worldObj.getTileEntity(this.xCoord, this.yCoord, this.zCoord) != this ? false : player.getDistanceSq((double)this.xCoord + 0.5D, (double)this.yCoord + 0.5D, (double)this.zCoord + 0.5D) <= 64.0D;
-	}
-
-	public void openInventory() {}
-	
-	public void closeInventory() {}
-	
-	@Override
-	public boolean isItemValidForSlot(int slot, ItemStack stack) {
-		if(slot == 0){
-			if(stack.getItem() instanceof ItemBlock)
-				if(Block.getBlockFromItem(stack.getItem()).renderAsNormalBlock()) return true;
-			
-			return false;
-		}
-		return false;
-	}
-
-	public int[] getAccessibleSlotsFromSide(int p_94128_1_){ return new int[]{}; }
-
-	public boolean canInsertItem(int p_102007_1_, ItemStack p_102007_2_,int p_102007_3_) { return false;}
-
-	public boolean canExtractItem(int p_102008_1_, ItemStack p_102008_2_,int p_102008_3_) {return false;}
-	
-	/*-----END-Inventory----*/
-	
 	/*-----OC-Network------*/
 	
 	@Override
-	public Node sidedNode(ForgeDirection side) {
-		if(this.worldObj!=null && !this.worldObj.isRemote && side!=null && !side.equals(ForgeDirection.UP)) return this.side.node();
+	public Node sidedNode(EnumFacing side) {
+		if(this.worldObj!=null && !this.worldObj.isRemote && side!=null && !side.equals(EnumFacing.UP)) return this.side.node();
 		return null;
 	}
 	
 	@Override
-	public boolean canConnect(ForgeDirection side) {
-		if(side!=null && !side.equals(ForgeDirection.UP)) return true;
+	public boolean canConnect(EnumFacing side) {
+		if(side!=null && !side.equals(EnumFacing.UP)) return true;
 		return false;
 	}
 
@@ -324,29 +178,13 @@ public class NetworkRailBaseTile extends TileEntity implements ISidedInventory, 
 	
 	public void setMode(int Mode){ this.Mode=Mode; }
 	
-	@SideOnly(Side.CLIENT)
-	public IIcon getTopIcon(){ return this.camoTop; }
-
-	public Node[] onAnalyze(EntityPlayer player, int side, float hitX, float hitY, float hitZ) { return null; }
-	
 	public Environment getRailPlug(){
 		return this.rail;
 	}
 
-	/*-------AE2-Spatial-Storage-Handler------*/
 
-	public void doneMoving() {
-		this.moving=false;
-		Network.joinOrCreateNetwork(this);
-		this.forcesync();
+	@Override
+	public Node[] onAnalyze(EntityPlayer player, EnumFacing side, float hitX, float hitY, float hitZ) {
+		return new Node[0];
 	}
-	
-	public boolean prepareToMove() {
-		this.moving=true;
-		return true;
-	}
-	
-	/*-------END-AE2-Spatial-Storage-Handler------*/
-	
-
 }

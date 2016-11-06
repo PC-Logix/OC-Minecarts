@@ -2,7 +2,6 @@ package mods.ocminecart.client.gui;
 
 import com.mojang.realmsclient.gui.ChatFormatting;
 import mods.ocminecart.OCMinecart;
-import mods.ocminecart.client.gui.widget.GuiUtil;
 import mods.ocminecart.common.container.RemoteModuleContainer;
 import mods.ocminecart.network.ModNetwork;
 import mods.ocminecart.network.message.GuiButtonClick;
@@ -13,6 +12,7 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.translation.I18n;
+import net.minecraftforge.fml.client.config.GuiUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
@@ -39,7 +39,7 @@ public class RemoteModuleGui extends GuiContainer {
 	public void initGui(){
 		super.initGui();
 		
-		pass = new GuiTextField(Minecraft.getMinecraft().fontRendererObj,8,85,75,10);
+		pass = new GuiTextField(0, Minecraft.getMinecraft().fontRendererObj,8,85,75,10);
 		pass.setFocused(false);
 		pass.setEnabled(false);
 		pass.setMaxStringLength(10);
@@ -79,7 +79,7 @@ public class RemoteModuleGui extends GuiContainer {
 			List<String> txt = new ArrayList<String>();
 			txt.add(ChatFormatting.WHITE+I18n.translateToLocal("tooltip."+OCMinecart.MODID+".gui.chpass"));
 			txt.add(ChatFormatting.GRAY+I18n.translateToLocal("tooltip."+OCMinecart.MODID+".gui.empass"));
-			GuiUtil.drawHoverText(txt, mx-this.guiLeft, my-this.guiTop, this.width, this.height, this.guiLeft, Minecraft.getMinecraft().fontRendererObj);
+			GuiUtils.drawHoveringText(txt, mx-this.guiLeft, my-this.guiTop, this.width, this.height, this.guiLeft, Minecraft.getMinecraft().fontRendererObj);
 		}
 		
 		b1 = this.buttonList.get(1);
@@ -87,7 +87,7 @@ public class RemoteModuleGui extends GuiContainer {
 			List<String> txt = new ArrayList<String>();
 			txt.add(ChatFormatting.WHITE+((locked)?"Locked":"Unlocked"));
 			txt.add(ChatFormatting.GRAY+I18n.translateToLocal("tooltip."+OCMinecart.MODID+".gui.lockbtn"));
-			GuiUtil.drawHoverText(txt, mx-this.guiLeft, my-this.guiTop, this.width, this.height, this.guiLeft, Minecraft.getMinecraft().fontRendererObj);
+			GuiUtils.drawHoveringText(txt, mx-this.guiLeft, my-this.guiTop, this.width, this.height, this.guiLeft, Minecraft.getMinecraft().fontRendererObj);
 		}
 		
 		GL11.glPopAttrib();

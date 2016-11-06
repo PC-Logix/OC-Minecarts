@@ -17,7 +17,7 @@ public class ModNetwork {
 	
 	public static void init(){
 		channel= NetworkRegistry.INSTANCE.newSimpleChannel(OCMinecart.MODID.toLowerCase());
-		int id=-1;
+		int id=0;
 		
 		channel.registerMessage(GuiButtonClick.Handler.class, GuiButtonClick.class, id++, Side.SERVER);
 		channel.registerMessage(ComputercartInventoryUpdate.Handler.class, ComputercartInventoryUpdate.class, id++, Side.CLIENT);
