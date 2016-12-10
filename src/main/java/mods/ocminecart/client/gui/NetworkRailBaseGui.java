@@ -93,7 +93,8 @@ public class NetworkRailBaseGui extends GuiContainer{
 	
 	@Override
 	protected void drawGuiContainerForegroundLayer(int p_146976_2_, int p_146976_3_) {
-		this.fontRendererObj.drawString(tile.getInventoryName(), this.xSize / 2  - this.fontRendererObj.getStringWidth(tile.getInventoryName()) / 2, 6, 0x404040);
+		String name = I18n.translateToLocal("gui."+OCMinecart.MODID+".networkrailbase.title");
+		this.fontRendererObj.drawString(name, this.xSize / 2  - this.fontRendererObj.getStringWidth(name) / 2, 6, 0x404040);
 		this.fontRendererObj.drawString(I18n.translateToLocal("container.inventory"), 8, this.ySize-96+2, 0x404040);
 		this.fontRendererObj.drawString(I18n.translateToLocal("gui."+OCMinecart.MODID+".networkrailbase.info"), 8, 24, 0x404040);
 	}

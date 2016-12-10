@@ -32,16 +32,21 @@ import mods.ocminecart.network.message.ComputercartInventoryUpdate;
 import mods.ocminecart.network.message.EntitySyncRequest;
 import mods.ocminecart.network.message.UpdateRunning;
 import net.minecraft.client.renderer.EnumFaceDirection;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
@@ -58,7 +63,9 @@ import java.util.Map.Entry;
 public class ComputerCart extends AdvCart implements MachineHost, Analyzable, ISyncEntity, IComputerCart{
 	
 	private final boolean isServer = FMLCommonHandler.instance().getEffectiveSide().isServer();
-	
+
+	private static final DataParameter<Integer> COLOR = EntityDataManager.<Integer>createKey(Entity.class, DataSerializers.VARINT);
+
 	private int tier = -1;	//The tier of the cart
 	private Machine machine; //The machine object
 	private boolean firstupdate = true; //true if the update() function gets called the first time
@@ -185,7 +192,7 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 	protected void entityInit(){
 		super.entityInit();
 		
-		this.dataWatcher.addObject(24, 0x0000FF);
+		this.dataManager.register(COLOR, 0x0000FF);
 		
 		this.machine = li.cil.oc.api.Machine.create(this);
 		if(FMLCommonHandler.instance().getEffectiveSide().isServer()){
@@ -488,23 +495,29 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 		
 		return stack;
 	}
-	
+
+	@Nullable
 	@Override
-	public void travelToDimension(int dim){
+	public Entity changeDimension(int dimensionIn) {
 		try{
 			this.chDim = true;
-			super.travelToDimension(dim);
+			super.changeDimension(dimensionIn);
 		}
 		finally{
 			this.chDim = false;
 			this.setDead();
 		}
 	}
-	
+
 	@Override
-	public boolean hasCustomInventoryName(){ return true; } // Drop Item on Kill when Player is in Creative Mode
+	public boolean hasCustomName() {
+		return true; // Drop Item on Kill when Player is in Creative Mode
+	}
+
 	@Override
-	public ItemStack getPickedResult(MovingObjectPosition target){ return null; } 
+	public ItemStack getPickedResult(RayTraceResult target) {
+		return null;
+	}
 	
 	/*----------------------------------*/
 	
@@ -605,12 +618,12 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 
 	@Override
 	public String name() {
-		return this.func_95999_t();
+		return this.getCustomNameTag()
 	}
 
 	@Override
 	public void setName(String name) {
-		this.setMinecartName(name);
+		this.setCustomNameTag(name);
 	}
 
 	@Override
@@ -836,8 +849,8 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 	public double getEngineState(){ return this.getEngine(); }
 	public void setEngineState(double speed){ this.setEngine(speed); }
 	
-	public int getLightColor(){ return this.dataWatcher.getWatchableObjectInt(24); }
-	public void setLightColor(int color){ this.dataWatcher.updateObject(24, color);}
+	public int getLightColor(){ return this.dataManager.get(COLOR); }
+	public void setLightColor(int color){ this.dataManager.set(COLOR, color);}
 	
 	public boolean hasNetRail(){ return this.cRailCon; }
 

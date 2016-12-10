@@ -1,6 +1,5 @@
 package mods.ocminecart.common.inventory;
 
-import cpw.mods.fml.common.FMLCommonHandler;
 import li.cil.oc.api.API;
 import li.cil.oc.api.driver.EnvironmentProvider;
 import li.cil.oc.api.driver.Item;
@@ -21,7 +20,11 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
@@ -40,7 +43,7 @@ public abstract class ComponetInventory implements IInventory, Environment {
 		this.slots = new ItemStack[this.getSizeInventory()];
 	}
 
-	@Override
+    @Override
 	public ItemStack getStackInSlot(int slot) {
 		if(slot<this.getSizeInventory()) return this.slots[slot];
 		return null;
@@ -67,10 +70,18 @@ public abstract class ComponetInventory implements IInventory, Environment {
 		return null;
 	}
 
-	@Override
-	public ItemStack getStackInSlotOnClosing(int p_70304_1_) {
-		return null;
-	}
+    @Nullable
+    @Override
+    public ItemStack removeStackFromSlot(int slot) {
+        if(slot>=0 && slot<this.getSizeInventory()) {
+            this.onItemRemoved(slot, slots[slot]);
+            ItemStack stack = slots[slot];
+            updateSlot(slot, null);
+            this.markDirty();
+            return stack;
+        }
+        return null;
+    }
 
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack stack) {
@@ -98,11 +109,6 @@ public abstract class ComponetInventory implements IInventory, Environment {
 	}
 
 	@Override
-	public String getInventoryName() {
-		return "Component Inventory";
-	}
-
-	@Override
 	public int getInventoryStackLimit() {
 		return 1;
 	}
@@ -114,16 +120,20 @@ public abstract class ComponetInventory implements IInventory, Environment {
 	public boolean isUseableByPlayer(EntityPlayer player) {
 		return true;
 	}
-	
-	public void updateSlot(int slot, ItemStack stack){
+
+    @Override
+    public void openInventory(EntityPlayer player) {
+
+    }
+
+    @Override
+    public void closeInventory(EntityPlayer player) {
+
+    }
+
+    public void updateSlot(int slot, ItemStack stack){
 		slots[slot] = stack;
 	}
-
-	@Override
-	public void openInventory() {}
-
-	@Override
-	public void closeInventory() {}
 
 	@Override
 	public boolean isItemValidForSlot(int slot, ItemStack stack) {
@@ -133,11 +143,30 @@ public abstract class ComponetInventory implements IInventory, Environment {
 		return false;
 	}
 
-	@Override
-	public boolean hasCustomInventoryName() {
-		return false;
-	}
-	
+    @Override
+    public int getField(int id) {
+        return 0;
+    }
+
+    @Override
+    public void setField(int id, int value) {
+
+    }
+
+    @Override
+    public int getFieldCount() {
+        return 0;
+    }
+
+    @Override
+    public void clear() {
+        int size = this.getSizeInventory();
+        for(int i=0;i<size;i++)
+        {
+            this.removeStackFromSlot(i);
+        }
+    }
+
 	public String getSlotType(int slot){
 		if(slot>=20 && slot<=22){
 			Item drv = CustomDriver.driverFor(this.getContainer(slot-20));
@@ -228,8 +257,8 @@ public abstract class ComponetInventory implements IInventory, Environment {
 				//Unfortunately it's not possible to make 'instanceof' with a Scala class and I'am lazy. So I check the Environment class.
 				if((drv instanceof EnvironmentProvider) && ((EnvironmentProvider)drv).getEnvironment(this.getStackInSlot(i)) == Screen.class){
 					NBTTagCompound tag = this.dataTag(drv, this.getStackInSlot(i));
-					
-					Set<String> tags = tag.func_150296_c();
+
+					Set<String> tags = tag.getKeySet();
 					String[] list = tags.toArray(new String[tags.size()]);
 					for(int j=0; j<list.length; j+=1){
 						tag.removeTag(list[j]);
@@ -294,7 +323,7 @@ public abstract class ComponetInventory implements IInventory, Environment {
 		try{
 			NBTTagCompound tag = this.dataTag(driver, stack);
 			
-			Set<String> tags = tag.func_150296_c();
+			Set<String> tags = tag.getKeySet();
 			String[] list = tags.toArray(new String[tags.size()]);
 			for(int i=0; i<list.length; i+=1){
 				tag.removeTag(list[i]);
@@ -365,4 +394,19 @@ public abstract class ComponetInventory implements IInventory, Environment {
 
 	@Override
 	public void onMessage(Message message) {}
+
+    @Override
+    public String getName() {
+        return "";
+    }
+
+    @Override
+    public boolean hasCustomName() {
+        return false;
+    }
+
+    @Override
+    public ITextComponent getDisplayName() {
+        return new TextComponentString(getName());
+    }
 }
