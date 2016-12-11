@@ -46,6 +46,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -60,7 +61,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
 
-public class ComputerCart extends AdvCart implements MachineHost, Analyzable, ISyncEntity, IComputerCart{
+public class ComputerCart extends RailCart implements MachineHost, Analyzable, ISyncEntity, IComputerCart{
 	
 	private final boolean isServer = FMLCommonHandler.instance().getEffectiveSide().isServer();
 
@@ -80,9 +81,7 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 	private Player player; //OC's fake player
 	private String name; //name of the cart
 	
-	private int cRailX = 0;	// Position of the connected Network Rail
-	private int cRailY = 0;
-	private int cRailZ = 0;
+	private BlockPos cRailPos = null;	// Position of the connected Network Rail
 	private int cRailDim = 0;
 	private boolean cRailCon = false; //True if the card is connected to a network rail
 	private Node cRailNode = null; // This node will not get saved in NBT because it should automatic disconnect after restart; 
@@ -213,9 +212,7 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 		if(nbt.hasKey("netrail")){
 			NBTTagCompound netrail = nbt.getCompoundTag("netrail");
 			this.cRailCon=true;
-			this.cRailX = netrail.getInteger("posX");
-			this.cRailY = netrail.getInteger("posY");
-			this.cRailZ = netrail.getInteger("posZ");
+			this.cRailPos = BlockPos.fromLong(netrail.getLong("pos"));
 			this.cRailDim = netrail.getInteger("posDim");
 		}
 		if(nbt.hasKey("settings")){
@@ -253,9 +250,7 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 		//Data about the connected rail
 		if(this.cRailCon){
 			NBTTagCompound netrail = new NBTTagCompound();
-			netrail.setInteger("posX", this.cRailX);
-			netrail.setInteger("posY", this.cRailY);
-			netrail.setInteger("posZ", this.cRailZ);
+			netrail.setLong("pos", this.cRailPos.toLong());
 			netrail.setInteger("posDim", this.cRailDim);
 			nbt.setTag("netrail", netrail);
 		}
@@ -410,35 +405,30 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 		}
 		return EnumActionResult.SUCCESS;
 	}
-	
+
 	@Override
-	public Node[] onAnalyze(EntityPlayer player, int side, float hitX, float hitY, float hitZ) {
+	public Node[] onAnalyze(EntityPlayer player, EnumFacing side, float hitX, float hitY, float hitZ) {
 		return new Node[]{this.machine.node()};
 	}
 	
 	private void checkRailConnection(){
 		//If the cart isn't connected check for a new connection
-		if(!this.cRailCon && this.onRail() && (this.worldObj.getBlock(MathHelper.floor_double(this.posX), MathHelper.floor_double(this.posY), MathHelper.floor_double(this.posZ)) instanceof INetRail)){
-			int x = MathHelper.floor_double(this.posX);
-			int y = MathHelper.floor_double(this.posY);
-			int z = MathHelper.floor_double(this.posZ);
-			INetRail netrail = (INetRail) this.worldObj.getBlock(x,y,z);
-			if(netrail.isValid(this.worldObj, x, y, z, this) && netrail.getResponseEnvironment(this.worldObj, x, y, z) != null){
-				this.cRailX = MathHelper.floor_double(this.posX);
-				this.cRailY = MathHelper.floor_double(this.posY);
-				this.cRailZ = MathHelper.floor_double(this.posZ);
-				this.cRailDim = this.worldObj.provider.dimensionId;
+		if(!this.cRailCon && this.onRail() && (this.worldObj.getBlockState(this.getPosition()).getBlock() instanceof INetRail)){
+			INetRail netrail = (INetRail) this.worldObj.getBlockState(this.getPosition()).getBlock();
+			if(netrail.isValid(this.worldObj, this.getPosition(), this) && netrail.getResponseEnvironment(this.worldObj, this.getPosition()) != null){
+				this.cRailPos = this.getPosition();
+				this.cRailDim = this.worldObj.provider.getDimension();
 				this.cRailCon = true;
 			}
 		}
 		//If the cart is connected to a rail check if the connection is still valid and connect or disconnect
 		if(this.cRailCon){
 			World w = DimensionManager.getWorld(this.cRailDim);
-			if( w.getBlock(this.cRailX,this.cRailY,this.cRailZ) instanceof INetRail){
-				INetRail netrail = (INetRail) w.getBlock(this.cRailX,this.cRailY,this.cRailZ);
+			if( w.getBlockState(this.cRailPos).getBlock() instanceof INetRail){
+				INetRail netrail = (INetRail) w.getBlockState(this.cRailPos).getBlock();
 				//Connect a new network Rail
-				if(netrail.isValid(w, this.cRailX, this.cRailY, this.cRailZ, this) && netrail.getResponseEnvironment(w, this.cRailX, this.cRailY, this.cRailZ)!=null){
-					Node railnode = netrail.getResponseEnvironment(w, this.cRailX, this.cRailY, this.cRailZ).node();
+				if(netrail.isValid(w, this.cRailPos, this) && netrail.getResponseEnvironment(w, this.cRailPos)!=null){
+					Node railnode = netrail.getResponseEnvironment(w, this.cRailPos).node();
 					if(!this.machine.node().canBeReachedFrom(railnode)){
 						this.machine.node().connect(railnode);
 						this.cRailNode = railnode;
@@ -446,8 +436,8 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 					}
 				}
 				//Disconnect when the cart leaves a network rail
-				else if(netrail.getResponseEnvironment(w, this.cRailX, this.cRailY, this.cRailZ)!=null){
-					Node railnode = netrail.getResponseEnvironment(w, this.cRailX, this.cRailY, this.cRailZ).node();
+				else if(netrail.getResponseEnvironment(w, this.cRailPos)!=null){
+					Node railnode = netrail.getResponseEnvironment(w, this.cRailPos).node();
 					if(this.machine.node().canBeReachedFrom(railnode)){
 						this.machine.node().disconnect(railnode);
 						this.cRailCon=false;
@@ -501,7 +491,7 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 	public Entity changeDimension(int dimensionIn) {
 		try{
 			this.chDim = true;
-			super.changeDimension(dimensionIn);
+			return super.changeDimension(dimensionIn);
 		}
 		finally{
 			this.chDim = false;
@@ -618,7 +608,7 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 
 	@Override
 	public String name() {
-		return this.getCustomNameTag()
+		return this.getCustomNameTag();
 	}
 
 	@Override
@@ -806,7 +796,8 @@ public class ComputerCart extends AdvCart implements MachineHost, Analyzable, IS
 	}
 	
 	/*---------Railcraft---------*/
-	
+
+	@Override
 	public void lockdown(boolean lock){
 		super.lockdown(lock);
 		if(lock != this.isLocked())

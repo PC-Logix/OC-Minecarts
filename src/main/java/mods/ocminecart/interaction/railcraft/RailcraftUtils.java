@@ -1,32 +1,39 @@
 package mods.ocminecart.interaction.railcraft;
 
-import cpw.mods.fml.common.Loader;
 import mods.ocminecart.common.util.RotationHelper;
-import mods.railcraft.api.carts.CartTools;
+import mods.railcraft.api.carts.CartToolsAPI;
 import mods.railcraft.api.carts.ILinkageManager;
 import mods.railcraft.api.core.items.IToolCrowbar;
+import mods.railcraft.common.blocks.charge.ICartBattery;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityInject;
+import net.minecraftforge.fml.common.Loader;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class RailcraftUtils {
-	
-	public static boolean isUsingChrowbar(EntityPlayer player){
-		if(!Loader.isModLoaded("Railcraft")) return false;
-		if(player.getCurrentEquippedItem()!=null && (player.inventory .getCurrentItem().getItem() instanceof IToolCrowbar))
+
+	@CapabilityInject(ICartBattery.class)
+	public static Capability<ICartBattery> CHARGE_CART_CAPABILITY;
+
+	public static boolean isUsingChrowbar(EntityPlayer player, EnumHand hand){
+		//if(!Loader.isModLoaded("Railcraft")) return false;
+		if(player.getHeldItem(hand)!=null && (player.getHeldItem(hand).getItem() instanceof IToolCrowbar))
 			return true;
 		return false;
 	}
-	
+
 	public static HashMap<Integer, EntityMinecart> sortCarts(EntityMinecart middle){
-		if(!Loader.isModLoaded("Railcraft")) return null;
-		ILinkageManager link = CartTools.linkageManager;
-		Iterable<EntityMinecart> cartlist = link.getCartsInTrain(middle);
-		if(cartlist==null) return null;
+		//if(!Loader.isModLoaded("Railcraft")) return null;
+		ILinkageManager link = CartToolsAPI.getLinkageManager(middle.getEntityWorld());
+		Iterable<EntityMinecart> cartlist = link.trainIterator(middle);
 		
 		HashMap<Integer, EntityMinecart> sort = new HashMap<Integer, EntityMinecart>();
 		int mpos = -1;
@@ -47,7 +54,7 @@ public class RailcraftUtils {
 	}
 	
 	public static int countCarts(EntityMinecart cart, EntityMinecart first){
-		if(!Loader.isModLoaded("Railcraft")) return 1;
+		//if(!Loader.isModLoaded("Railcraft")) return 1;
 		HashMap<Integer, EntityMinecart> map = sortCarts(cart);
 		
 		if(map==null) return 0;
@@ -72,8 +79,8 @@ public class RailcraftUtils {
 	}
 	
 	public static EntityMinecart getConnectedCartSide(EntityMinecart cart, boolean front){
-		if(!Loader.isModLoaded("Railcraft")) return null;
-		ILinkageManager link = CartTools.linkageManager;
+		//if(!Loader.isModLoaded("Railcraft")) return null;
+		ILinkageManager link = CartToolsAPI.getLinkageManager(cart.getEntityWorld());
 		EntityMinecart cartA = link.getLinkedCartA(cart);
 		EntityMinecart cartB = link.getLinkedCartB(cart);
 		double angleA = (cartA!=null)?RotationHelper.calcAngle(cart.posX,cart.posZ, cartA.posX, cartA.posZ):0;
@@ -94,11 +101,11 @@ public class RailcraftUtils {
 	}
 	
 	public static EntityMinecart findLinkableCart(EntityMinecart cart, double dyaw){
-		if(!Loader.isModLoaded("Railcraft")) return null;
+		//if(!Loader.isModLoaded("Railcraft")) return null;
 		World w = cart.worldObj;
 		if(w.isRemote) return null;
 		
-		ILinkageManager linkm = CartTools.linkageManager;
+		ILinkageManager linkm = CartToolsAPI.getLinkageManager(cart.getEntityWorld());
 		
 		List<Entity> entlist = w.loadedEntityList;
 		EntityMinecart link=null;

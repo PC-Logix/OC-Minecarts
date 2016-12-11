@@ -2,37 +2,44 @@ package mods.ocminecart.common.minecart;
 
 import mods.ocminecart.Settings;
 import mods.ocminecart.common.util.BitUtil;
+import mods.ocminecart.interaction.railcraft.RailcraftUtils;
 import mods.railcraft.api.carts.IEnergyTransfer;
 import mods.railcraft.client.emblems.EmblemToolsClient;
 import mods.railcraft.common.emblems.EmblemToolsServer;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRailBase;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Optional;
 
 //Is the Base for a solid, self powered cart with a brake.
-//Later I will add the Railcraft integration here
-@Optional.InterfaceList({
-	@Optional.Interface(iface = "mods.railcraft.api.carts.IEnergyTransfer", modid = "Railcraft") ,
-	@Optional.Interface(iface = "mods.railcraft.api.electricity.IElectricMinecart", modid = "Railcraft")
-})
-public abstract class AdvCart extends EntityMinecart implements IEnergyTransfer, IElectricMinecart {
-	
+//Also the CartBase for Railcraft Integration
+public abstract class RailCart extends EntityMinecart{
+
+	private static final DataParameter<Byte> FLAGS = EntityDataManager.createKey(Entity.class, DataSerializers.BYTE);
+	private static final DataParameter<Float> SPEED = EntityDataManager.createKey(Entity.class, DataSerializers.FLOAT);
+	private static final DataParameter<String> EMBLEM = EntityDataManager.createKey(Entity.class, DataSerializers.STRING);
+
 	private ChargeHandler charge;
 	
-	public AdvCart(World p_i1713_1_, double p_i1713_2_, double p_i1713_4_,
-			double p_i1713_6_) {
+	public RailCart(World p_i1713_1_, double p_i1713_2_, double p_i1713_4_,
+                    double p_i1713_6_) {
 		super(p_i1713_1_, p_i1713_2_, p_i1713_4_, p_i1713_6_);
 	}
 
-	public AdvCart(World p_i1713_1) {
+	public RailCart(World p_i1713_1) {
 		super(p_i1713_1);
 	}
 
@@ -42,9 +49,9 @@ public abstract class AdvCart extends EntityMinecart implements IEnergyTransfer,
 		if(Loader.isModLoaded("Railcraft") && FMLCommonHandler.instance().getEffectiveSide().isServer())
 			charge = new ChargeHandler(this, ChargeHandler.Type.USER, Settings.ComputerCartETrackBuf, Settings.ComputerCartETrackLoss);
 		
-		this.getDataManager()..addObject(3, (byte)0); // Booleans (is Locked, Brake enabled)
-		this.dataWatcher.addObject(4, 0.0F);  //Engine speed
-		this.dataWatcher.addObject(5, "");	//Emblem id [Railcraft]
+		this.getDataManager().register(FLAGS, (byte)0); // Booleans (is Locked, Brake enabled)
+		this.getDataManager().register(SPEED, 0.0F);  //Engine speed
+		this.getDataManager().register(EMBLEM, "");	//Emblem id [Railcraft]
 		// Free DataWatcher 6-16, 23-32
 	}
 	
@@ -60,14 +67,14 @@ public abstract class AdvCart extends EntityMinecart implements IEnergyTransfer,
 	public void writeEntityToNBT(NBTTagCompound nbt){
 		super.writeEntityToNBT(nbt);
 		NBTTagCompound tag = new NBTTagCompound();
-		tag.setDouble("enginespeed", this.dataWatcher.getWatchableObjectFloat(4));
-		tag.setBoolean("brake", BitUtil.getBit(this.dataWatcher.getWatchableObjectByte(3), 0));
+		tag.setDouble("enginespeed", this.getDataManager().get(SPEED));
+		tag.setBoolean("brake", BitUtil.getBit(this.getDataManager().get(FLAGS), 0));
 		if(Loader.isModLoaded("Railcraft")){
 			NBTTagCompound rctag = new NBTTagCompound();
-			rctag.setBoolean("locked", BitUtil.getBit(this.dataWatcher.getWatchableObjectByte(3), 1));
+			rctag.setBoolean("locked", BitUtil.getBit(this.getDataManager().get(FLAGS), 1));
 			if(this.charge!=null) this.charge.writeToNBT(rctag);
-			String emblem = this.dataWatcher.getWatchableObjectString(5);
-			if(emblem!=null && emblem!="") rctag.setString("emblem_id", emblem);
+			String emblem = this.getDataManager().get(EMBLEM);
+			if(emblem!=null && emblem.isEmpty()) rctag.setString("emblem_id", emblem);
 			else rctag.removeTag("emblem_id");
 			tag.setTag("railcraft", rctag);
 		}
@@ -98,23 +105,20 @@ public abstract class AdvCart extends EntityMinecart implements IEnergyTransfer,
 		this.setDead();
 		ItemStack itemstack = this.getCartItem();
 
-		if (this.func_95999_t() != null) {
-			itemstack.setStackDisplayName(this.func_95999_t());
+		if (!this.getCustomNameTag().isEmpty()) {
+			itemstack.setStackDisplayName(this.getCustomNameTag());
 		}
 
 		this.entityDropItem(itemstack, 0.0F);
 	}
 
 	@Override
-	public int getMinecartType() {
-		return -1;
+	public Type getType() {
+		return null;
 	}
 
 	public boolean onRail() {
-		int x = MathHelper.floor_double(this.posX);
-		int y = MathHelper.floor_double(this.posY);
-		int z = MathHelper.floor_double(this.posZ);
-		return BlockRailBase.func_150049_b_(this.worldObj, x, y, z);
+		return BlockRailBase.isRailBlock(this.worldObj, this.getPosition());
 	}
 
 	public void onUpdate() {
@@ -178,18 +182,26 @@ public abstract class AdvCart extends EntityMinecart implements IEnergyTransfer,
     	return Math.sqrt(this.motionX * this.motionX + this.motionZ * this.motionZ);
     }
 
-	public AxisAlignedBB getBoundingBox() {
-		if(Loader.isModLoaded("Railcraft") && Settings.GeneralFixCartBox)	//The Railcraft collision handler breaks some things
-			return super.getBoundingBox();
-		return this.getCollisionBox(this);
-	}
-
 	public boolean canBePushed() {
 		return (!BitUtil.getBit(this.dataWatcher.getWatchableObjectByte(3),0) || !onRail());
 	}
 	
 	protected abstract double addEnergy(double amount, boolean simulate);
-	
+
+	@Override
+	public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
+		return capability == RailcraftUtils.CHARGE_CART_CAPABILITY || super.hasCapability(capability, facing);
+	}
+
+	@Override
+	public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
+		if(capability == RailcraftUtils.CHARGE_CART_CAPABILITY)
+		{
+			return null;
+		}
+		return super.getCapability(capability, facing);
+	}
+
 	/*-------Railcraft-------*/
 	public void lockdown(boolean lock){
 		if(lock != BitUtil.getBit(this.dataWatcher.getWatchableObjectByte(3), 1))
@@ -230,12 +242,12 @@ public abstract class AdvCart extends EntityMinecart implements IEnergyTransfer,
 	}
 	
 	public boolean setEmblem(ItemStack stack){
-		if(!Loader.isModLoaded("Railcraft")) return false;
+		//if(!Loader.isModLoaded("Railcraft")) return false;
 		return setEmblem(EmblemToolsServer.getEmblemIdentifier(stack));
 	}
 	
 	public boolean setEmblem(String emblem){
-		if(!Loader.isModLoaded("Railcraft")) return false;
+		//if(!Loader.isModLoaded("Railcraft")) return false;
 		if(emblem==this.dataWatcher.getWatchableObjectString(5)) return false;
 		if(emblem==null) emblem="";
 		this.dataWatcher.updateObject(5, emblem);
@@ -243,11 +255,10 @@ public abstract class AdvCart extends EntityMinecart implements IEnergyTransfer,
 	}
 	
 	public String getEmblem(){
-		if(!Loader.isModLoaded("Railcraft")) return null;
+		//if(!Loader.isModLoaded("Railcraft")) return null;
 		return this.dataWatcher.getWatchableObjectString(5);
 	}
-	
-	@Optional.Method(modid="Railcraft")		
+
 	public ResourceLocation getEmblemIcon(){
 		String id = this.dataWatcher.getWatchableObjectString(5);
 		if(id==null || id.length()<1) return null;
