@@ -5,6 +5,8 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -12,20 +14,20 @@ import java.util.ArrayList;
 
 public class InventoryUtil {
 
-	public static int dropItemInventoryWorld(ItemStack stack, World world, int x, int y, int z, ForgeDirection access, int num){
-		TileEntity entity = world.getTileEntity(x, y, z);
+	public static int dropItemInventoryWorld(ItemStack stack, World world, BlockPos pos, EnumFacing access, int num){
+		TileEntity entity = world.getTileEntity(pos);
 		if(entity instanceof IInventory){
 			return putInventory(stack, (IInventory) entity, num, access);
 		}
 		return -1;
 	}
 	
-	public static int suckItemInventoryWorld(IInventory target, int[] taccess, World world, int x, int y, int z, ForgeDirection access, int num){
-		return suckItemInventoryWorld(target, taccess, -1, world, x,y,z, access, num);
+	public static int suckItemInventoryWorld(IInventory target, int[] taccess, World world, BlockPos pos, EnumFacing access, int num){
+		return suckItemInventoryWorld(target, taccess, -1, world, pos, access, num);
 	}
 	
-	public static int suckItemInventoryWorld(IInventory target, int[] taccess, int tfirst, World world, int x, int y, int z, ForgeDirection access, int num){
-		TileEntity entity = world.getTileEntity(x, y, z);
+	public static int suckItemInventoryWorld(IInventory target, int[] taccess, int tfirst, World world, BlockPos pos, EnumFacing access, int num){
+		TileEntity entity = world.getTileEntity(pos);
 		int moved = 0;
 		if(entity instanceof IInventory){
 			for(int i=0;i<taccess.length && moved<1;i+=1){
@@ -36,7 +38,7 @@ public class InventoryUtil {
 					moved = mov.stackSize;
 					int[] slots = sortAccessible(target, taccess, mov);
 					if(tfirst >= 0) slots = prioritizeAccessible(slots, tfirst);
-					putInventory(mov,target,64,ForgeDirection.UNKNOWN,slots);
+					putInventory(mov,target,64,null,slots);
 				}
 			}
 			return moved;
@@ -44,7 +46,7 @@ public class InventoryUtil {
 		return -1;
 	}
 	
-	public static ItemStack suckInventory(ItemStack filter,IInventory inv, int maxnum, ForgeDirection access) {
+	public static ItemStack suckInventory(ItemStack filter,IInventory inv, int maxnum, EnumFacing access) {
 		int[] slots = getAccessible(inv,access);
 		ItemStack pulled = null;
 		for(int i=0;i<inv.getSizeInventory() && maxnum>0;i+=1){
@@ -71,13 +73,13 @@ public class InventoryUtil {
 		return pulled;
 	}
 	
-	public static int putInventory(ItemStack stack, IInventory inv, int maxnum, ForgeDirection access){
+	public static int putInventory(ItemStack stack, IInventory inv, int maxnum, EnumFacing access){
 		int[] slots = getAccessible(inv,access);
 		slots = sortAccessible(inv, slots, stack);
 		return putInventory(stack,inv,maxnum,access,slots);
 	}
 
-	public static int putInventory(ItemStack stack, IInventory inv, int maxnum, ForgeDirection access, int[] slots){
+	public static int putInventory(ItemStack stack, IInventory inv, int maxnum, EnumFacing access, int[] slots){
 		int maxcount = maxnum;
 		for(int i=0;i<slots.length;i+=1){
 			if(!(!(inv instanceof ISidedInventory) || ((inv instanceof ISidedInventory) && ((ISidedInventory)inv).canInsertItem(slots[i], stack, access.ordinal()))))
@@ -146,9 +148,9 @@ public class InventoryUtil {
 		return res;
 	}
 	
-	public static int[] getAccessible(IInventory inv, ForgeDirection access){
-		if((inv instanceof ISidedInventory) && access != ForgeDirection.UNKNOWN) 
-			return ((ISidedInventory)inv).getAccessibleSlotsFromSide(access.ordinal());
+	public static int[] getAccessible(IInventory inv, EnumFacing access){
+		if((inv instanceof ISidedInventory) && access != null)
+			return ((ISidedInventory)inv).getA(access.ordinal());
 		int sides[] = new int[inv.getSizeInventory()];
 		for(int i=0;i<inv.getSizeInventory();i+=1){
 			sides[i]=i;
@@ -187,10 +189,8 @@ public class InventoryUtil {
 				}
 			}
 			if (stack.stackSize > 0) {
-				player.dropPlayerItemWithRandomChoice(stack, false);
+				player.dropItem(stack, true, true);
 			}
 		}
 	}
-	
-	
 }

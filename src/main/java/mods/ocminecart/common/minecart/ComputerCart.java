@@ -391,7 +391,7 @@ public class ComputerCart extends RailCart implements MachineHost, Analyzable, I
 		ItemStack refMan = API.items.get("manual").createItemStack(1);
 		boolean openwiki = stack!=null && p.isSneaking() && stack.getItem() == refMan.getItem() && stack.getItemDamage() == refMan.getItemDamage();
 
-		if(RailcraftUtils.isUsingChrowbar(p)) return EnumActionResult.PASS;
+		if(RailcraftUtils.isUsingChrowbar(p, hand)) return EnumActionResult.PASS;
 
 		if(this.worldObj.isRemote && openwiki){
 			Manual.navigate(OCMinecart.MODID+"/%LANGUAGE%/item/cart.md");
@@ -400,7 +400,7 @@ public class ComputerCart extends RailCart implements MachineHost, Analyzable, I
 		else if(!this.worldObj.isRemote && !openwiki){
 			p.openGui(OCMinecart.instance, 1, this.worldObj, this.getEntityId(), -10, 0);
 		}
-		else if(this.worldObj.isRemote && !openwiki){
+		else if(this.worldObj.isRemote){
 			p.swingArm(hand);
 		}
 		return EnumActionResult.SUCCESS;
@@ -461,8 +461,6 @@ public class ComputerCart extends RailCart implements MachineHost, Analyzable, I
 	/*------------------------*/
 	
 	/*-----Minecart/Entity-Stuff-------*/
-	@Override
-	public int getMinecartType() { return -1; }
 
 	public static EntityMinecart create(World w, double x, double y, double z, ComputerCartData data) { return new ComputerCart(w, x, y, z, data); }
 	
@@ -554,7 +552,7 @@ public class ComputerCart extends RailCart implements MachineHost, Analyzable, I
 	public int componentSlot(String address) {
 		for(int i=0;i<this.compinv.getSizeInventory();i+=1){
 			ManagedEnvironment env = this.compinv.getSlotComponent(i);
-			if(env != null && env.node()!=null && env.node().address() == address) return i;
+			if(env != null && env.node()!=null && env.node().address().equals(address)) return i;
 		}
 		return -1;
 	}
@@ -664,57 +662,8 @@ public class ComputerCart extends RailCart implements MachineHost, Analyzable, I
 	
 	/*-------Inventory--------*/
 
-	@Override
-	public int getSizeInventory() {
-		return this.maininv.getSizeInventory();
-	}
-
-	@Override
-	public ItemStack getStackInSlot(int slot) {
-		return this.maininv.getStackInSlot(slot);
-	}
-
-	@Override
-	public ItemStack decrStackSize(int slot, int number) {
-		return this.maininv.decrStackSize(slot, number);
-	}
-
-	@Override
-	public ItemStack getStackInSlotOnClosing(int slot) {
-		return null;
-	}
-
-	@Override
-	public void setInventorySlotContents(int slot, ItemStack stack) {
-		this.maininv.setInventorySlotContents(slot, stack);
-	}
-
-	@Override
-	public String getInventoryName() {
-		return "inventory."+OCMinecart.MODID+".computercart";
-	}
-
-	@Override
-	public int getInventoryStackLimit() {
-		return this.maininv.getInventoryStackLimit();
-	}
-
-	@Override
-	public void markDirty() {}
-
-	@Override
 	public boolean isUseableByPlayer(EntityPlayer player) {
 		return player.getDistanceSqToEntity(this)<=64 && !this.isDead;
-	}
-
-	@Override
-	public void openInventory() {}
-	@Override
-	public void closeInventory() {}
-
-	@Override
-	public boolean isItemValidForSlot(int slot, ItemStack stack) {
-		return this.maininv.isItemValidForSlot(slot, stack);
 	}
 	
 /*------Tanks-------*/
@@ -738,36 +687,6 @@ public class ComputerCart extends RailCart implements MachineHost, Analyzable, I
 			}
 		}
 		return null;
-	}
-	
-	@Override
-	public int fill(EnumFaceDirection from, FluidStack resource, boolean doFill) {
-		return 0;
-	}
-
-	@Override
-	public FluidStack drain(numFaceDirectionfrom, FluidStack resource, boolean doDrain) {
-		return null;
-	}
-
-	@Override
-	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
-		return null;
-	}
-
-	@Override
-	public boolean canFill(ForgeDirection from, Fluid fluid) {
-		return false;
-	}
-
-	@Override
-	public boolean canDrain(ForgeDirection from, Fluid fluid) {
-		return false;
-	}
-
-	@Override
-	public FluidTankInfo[] getTankInfo(ForgeDirection from) {
-		return new FluidTankInfo[]{};
 	}
 	/*--------------------*/
 

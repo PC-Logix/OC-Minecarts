@@ -13,7 +13,8 @@ import mods.ocminecart.common.util.TankUtil;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidHandler;
 import net.minecraftforge.fluids.IFluidTank;
@@ -355,15 +356,13 @@ public class ComputerCartController implements ManagedEnvironment{
 			 return new Object[]{ false , "no slot selected"};
 		 if(amount<1) return new Object[]{ false };
 		 
-		 ForgeDirection dir = this.cart.toGlobal(ForgeDirection.getOrientation(side));
-		 int x = (int)Math.floor(this.cart.xPosition())+dir.offsetX;
-		 int y = (int)Math.floor(this.cart.yPosition())+dir.offsetY;
-		 int z = (int)Math.floor(this.cart.zPosition())+dir.offsetZ;
+		 EnumFacing dir = this.cart.toGlobal(EnumFacing.getHorizontal(side));
+		 BlockPos cartPos = this.cart.getPosition().add(dir.getDirectionVec()):
 		 
 		 ItemStack dstack = this.cart.mainInventory().getStackInSlot(sslot);
 		 if(dstack == null) return new Object[]{ false };
 		 
-		 if(!(this.cart.world().getTileEntity(x, y, z) instanceof IInventory)){
+		 if(!(this.cart.world().getTileEntity(cartPos) instanceof IInventory)){
 			 ArrayList<ItemStack> drop = new ArrayList<ItemStack>();
 			 
 			 int mov = Math.min(dstack.stackSize, amount);
@@ -376,7 +375,7 @@ public class ComputerCartController implements ManagedEnvironment{
 			 return new Object[]{ true };
 		 }
 		 else{
-			 int moved = InventoryUtil.dropItemInventoryWorld(dstack.copy(),  this.cart.world(), x, y, z, dir.getOpposite(), amount);
+			 int moved = InventoryUtil.dropItemInventoryWorld(dstack.copy(),  this.cart.world(), cartPos, dir.getOpposite(), amount);
 			 if(moved < 1) return new Object[]{ false, "inventory full" };
 			 if(dstack.stackSize > moved) dstack.stackSize-=moved;
 			 else this.cart.mainInventory().setInventorySlotContents(sslot, null);
@@ -394,17 +393,15 @@ public class ComputerCartController implements ManagedEnvironment{
 		 if(!(sslot>=0 && sslot<this.cart.mainInventory().getSizeInventory()))
 			 return new Object[]{ false ,"no slot selected"};
 		 if(amount<1) return new Object[]{ false };
+
+		 EnumFacing dir = this.cart.toGlobal(EnumFacing.getHorizontal(side));
+		 BlockPos cartPos = this.cart.getPosition().add(dir.getDirectionVec()):
 		 
-		 ForgeDirection dir = this.cart.toGlobal(ForgeDirection.getOrientation(side));
-		 int x = (int)Math.floor(this.cart.xPosition())+dir.offsetX;
-		 int y = (int)Math.floor(this.cart.yPosition())+dir.offsetY;
-		 int z = (int)Math.floor(this.cart.zPosition())+dir.offsetZ;
-		 
-		 if(!(this.cart.world().getTileEntity(x, y, z) instanceof IInventory)){
+		 if(!(this.cart.world().getTileEntity(cartPos) instanceof IInventory)){
 			 int moved = 0;
-			 int[] acc = InventoryUtil.getAccessible(this.cart.mainInventory(), ForgeDirection.UNKNOWN);
+			 int[] acc = InventoryUtil.getAccessible(this.cart.mainInventory(), null);
 			 acc = InventoryUtil.prioritizeAccessible(acc, this.cart.selectedSlot());
-			 if(!ItemUtil.hasDroppedItems(this.cart.world(), x, y, z))
+			 if(!ItemUtil.hasDroppedItems(this.cart.world(), cartPos))
 				 return new Object[]{ false };
 			 for(int i=0;i<acc.length && moved<1;i+=1){
 				 ItemStack filter = this.cart.mainInventory().getStackInSlot(acc[i]);
@@ -412,15 +409,15 @@ public class ComputerCartController implements ManagedEnvironment{
 				 acc = InventoryUtil.prioritizeAccessible(acc, this.cart.selectedSlot());
 				 int movable = InventoryUtil.spaceforItem(filter, this.cart.mainInventory(), acc);
 				 movable = Math.min(movable, Math.min((filter == null) ? 64 :filter.getMaxStackSize(), amount));
-				 ItemStack stack = ItemUtil.suckItems(this.cart.world(), x, y, z, filter, movable);
+				 ItemStack stack = ItemUtil.suckItems(this.cart.world(), cartPos, filter, movable);
 				 if(stack!=null) moved = stack.stackSize;
-				 if(moved > 0) InventoryUtil.putInventory(stack, this.cart.mainInventory(), moved, ForgeDirection.UNKNOWN, acc);
+				 if(moved > 0) InventoryUtil.putInventory(stack, this.cart.mainInventory(), moved, null, acc);
 			 }
 			 if(moved>0) context.pause(Settings.OC_SuckDelay);
 			 return new Object[]{ (moved > 0) };
 		 }
 		 else{
-			 int[] mslots = InventoryUtil.getAccessible(this.cart.mainInventory(), ForgeDirection.UNKNOWN);
+			 int[] mslots = InventoryUtil.getAccessible(this.cart.mainInventory(), null);
 			 int moved = InventoryUtil.suckItemInventoryWorld(this.cart.mainInventory(), mslots, this.cart.selectedSlot(), this.cart.worldObj, 
 					 x, y, z, dir.getOpposite(), amount);
 			 if(moved > 0){
@@ -441,7 +438,7 @@ public class ComputerCartController implements ManagedEnvironment{
 		 if(!(stank>0 && stank<=this.cart.tankcount()))
 			 return new Object[]{ false , "no tank selected"};
 		 
-		 ForgeDirection dir = this.cart.toGlobal(ForgeDirection.getOrientation(side));
+		 EnumFacing dir = this.cart.toGlobal(EnumFacing.getOrientation(side));
 		 int x = (int)Math.floor(this.cart.xPosition())+dir.offsetX;
 		 int y = (int)Math.floor(this.cart.yPosition())+dir.offsetY;
 		 int z = (int)Math.floor(this.cart.zPosition())+dir.offsetZ;
@@ -461,7 +458,7 @@ public class ComputerCartController implements ManagedEnvironment{
 		 if(!(stank>0 && stank<=this.cart.tankcount()))
 			 return new Object[]{ false , "no tank selected"};
 		 
-		 ForgeDirection dir = this.cart.toGlobal(ForgeDirection.getOrientation(side));
+		 EnumFacing dir = this.cart.toGlobal(EnumFacing.getOrientation(side));
 		 int x = (int)Math.floor(this.cart.xPosition())+dir.offsetX;
 		 int y = (int)Math.floor(this.cart.yPosition())+dir.offsetY;
 		 int z = (int)Math.floor(this.cart.zPosition())+dir.offsetZ;
@@ -494,7 +491,7 @@ public class ComputerCartController implements ManagedEnvironment{
 			 if(!(stank>0 && stank<=this.cart.tankcount()))
 				 return new Object[]{ false , "no tank selected"};
 			 
-			 ForgeDirection dir = this.cart.toGlobal(ForgeDirection.getOrientation(side));
+			 EnumFacing dir = this.cart.toGlobal(EnumFacing.getOrientation(side));
 			 int x = (int)Math.floor(this.cart.xPosition())+dir.offsetX;
 			 int y = (int)Math.floor(this.cart.yPosition())+dir.offsetY;
 			 int z = (int)Math.floor(this.cart.zPosition())+dir.offsetZ;

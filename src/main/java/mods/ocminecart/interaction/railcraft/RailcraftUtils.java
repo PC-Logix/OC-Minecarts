@@ -8,6 +8,7 @@ import mods.railcraft.common.blocks.charge.ICartBattery;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -139,6 +140,14 @@ public class RailcraftUtils {
 		}
 		return false;
 	}
-	
-	
+
+	public static void writeCharge(NBTTagCompound tag, ICartBattery battery) {
+		tag.setTag("charge", RailcraftUtils.CHARGE_CART_CAPABILITY.getStorage().writeNBT(RailcraftUtils.CHARGE_CART_CAPABILITY, battery, null));
+	}
+
+	public static  void readCharge(NBTTagCompound tag, ICartBattery battery) {
+		if (tag.hasKey("charge")) {
+			RailcraftUtils.CHARGE_CART_CAPABILITY.getStorage().readNBT(RailcraftUtils.CHARGE_CART_CAPABILITY, battery, null, tag.getTag("charge"));
+		}
+	}
 }

@@ -1,13 +1,11 @@
 package mods.ocminecart.common.minecart;
 
-import li.cil.oc.api.driver.EnvironmentHost;
 import li.cil.oc.api.internal.Agent;
 import li.cil.oc.api.internal.Tiered;
 import li.cil.oc.api.network.Environment;
-import net.minecraft.inventory.IInventory;
-import net.minecraftforge.fluids.IFluidHandler;
+import li.cil.oc.api.network.EnvironmentHost;
 
-public interface IComputerCart extends EnvironmentHost, Environment, Agent, Tiered, IInventory, IFluidHandler {
+public interface IComputerCart extends EnvironmentHost, Environment, Agent, Tiered {
 	
 	//Get Number of Components
 	int componentCount();

@@ -1,7 +1,5 @@
 package mods.ocminecart.common.container;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import li.cil.oc.api.internal.TextBuffer;
 import li.cil.oc.api.network.ManagedEnvironment;
 import mods.ocminecart.common.container.slots.ContainerSlot;
@@ -9,9 +7,11 @@ import mods.ocminecart.common.minecart.ComputerCart;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.ICrafting;
+import net.minecraft.inventory.IContainerListener;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -35,15 +35,16 @@ public class ComputerCartContainer extends Container {
 	
 	
 	public ComputerCartContainer(InventoryPlayer inventory,ComputerCart entity) {
+		super();
 		this.entity=entity;
-		
+
 		this.initComponents(this.entity.getCompinv().getComponents());
 		
 		this.addSlotToContainer(new ContainerSlot(entity.compinv, 20 , 188,232 - ((this.hasScreen) ? 0 : DELTA), entity.compinv.getContainer(0)));
 		this.addSlotToContainer(new ContainerSlot(entity.compinv, 21 , 206,232 - ((this.hasScreen) ? 0 : DELTA), entity.compinv.getContainer(1)));
 		this.addSlotToContainer(new ContainerSlot(entity.compinv, 22 , 224,232 - ((this.hasScreen) ? 0 : DELTA), entity.compinv.getContainer(2)));
 		
-		for(int i=0;i<entity.maininv.getMaxSizeInventory();i+=1){
+		for(int i=0;i<entity.maininv.getSlots();i+=1){
 			this.addSlotToContainer(new Slot(entity.maininv, i, -10000, -10000));
 		}
 		
@@ -120,7 +121,7 @@ public class ComputerCartContainer extends Container {
 	
 	private List<Integer> getCartInvSlots(ItemStack stack){
 		ArrayList<Integer> slots = new ArrayList<Integer>();
-		for(Slot slot : (List<Slot>)this.inventorySlots){
+		for(Slot slot : this.inventorySlots){
 			if(slot.inventory.equals(this.entity.maininv) || slot.inventory.equals(this.entity.compinv)){
 				slots.add(slot.slotNumber);
 			}
@@ -179,23 +180,24 @@ public class ComputerCartContainer extends Container {
 	public boolean getHasScreen(){
 		return this.hasScreen;
 	}
-	
-	public void addCraftigToICrafters(ICrafting craft){
-		super.addCraftingToCrafters(craft);
-		
-		craft.sendProgressBarUpdate(this, 0, (int) this.entity.getCurEnergy());
-		craft.sendProgressBarUpdate(this, 1, (int) this.entity.getMaxEnergy());
-		craft.sendProgressBarUpdate(this, 2, this.entity.getInventorySpace());
-		craft.sendProgressBarUpdate(this, 3, this.entity.selectedSlot());
+
+	@Override
+	public void addListener(IContainerListener listener) {
+		super.addListener(listener);
+		listener.sendProgressBarUpdate(this, 0, (int) this.entity.getCurEnergy());
+		listener.sendProgressBarUpdate(this, 1, (int) this.entity.getMaxEnergy());
+		listener.sendProgressBarUpdate(this, 2, this.entity.getInventorySpace());
+		listener.sendProgressBarUpdate(this, 3, this.entity.selectedSlot());
 	}
-	
+
+	@Override
 	public void detectAndSendChanges(){
 		super.detectAndSendChanges();
 		
 		if(this.entity.worldObj.isRemote) return;
 		
-		for(int i=0;i<this.crafters.size();i+=1){
-        	ICrafting craft = (ICrafting) this.crafters.get(i);
+		for(int i=0;i<this.listeners.size();i+=1){
+        	IContainerListener craft = (IContainerListener) this.listeners.get(i);
         	
         	if(this.entity.getCurEnergy() != this.sEnergy){
         		craft.sendProgressBarUpdate(this, 0, (int) (this.entity.getCurEnergy()));
