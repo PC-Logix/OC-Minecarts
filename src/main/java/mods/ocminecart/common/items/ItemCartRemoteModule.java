@@ -1,9 +1,6 @@
 package mods.ocminecart.common.items;
 
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import com.mojang.realmsclient.gui.ChatFormatting;
 import mods.ocminecart.OCMinecart;
 import mods.ocminecart.Settings;
 import mods.ocminecart.common.assemble.util.TooltipUtil;
@@ -13,7 +10,6 @@ import mods.ocminecart.common.items.interfaces.ItemEntityInteract;
 import mods.ocminecart.network.ModNetwork;
 import mods.ocminecart.network.message.ItemUseMessage;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
@@ -22,19 +18,21 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.IIcon;
-import net.minecraft.util.StatCollector;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
 
 import java.util.List;
 import java.util.Random;
 
-public class ItemCartRemoteModule extends Item implements ItemEntityInteract{
-	
-	private IIcon icons[] = new IIcon[3];
+public class ItemCartRemoteModule extends Item implements ItemEntityInteract, ItemUseMessage.IMPUsageItem{
+
 	public static int[] range;
 	
 	public ItemCartRemoteModule(){
@@ -52,7 +50,8 @@ public class ItemCartRemoteModule extends Item implements ItemEntityInteract{
 	 }
 	
 	//Called in the EventHandler
-	public boolean onEntityClick(EntityPlayer p, Entity e, ItemStack s, Type t){
+	@Override
+	public boolean onEntityClick(EntityPlayer p, Entity e, ItemStack s, Type t, EnumHand hand) {
 		if((e instanceof EntityMinecart) && t == Type.RIGHT_CLICK){
 			if(p.worldObj.isRemote) return true;
 			int err = RemoteExtenderRegister.enableRemote((EntityMinecart) e, true);
@@ -70,7 +69,7 @@ public class ItemCartRemoteModule extends Item implements ItemEntityInteract{
 			usedat.setDouble("posY", e.posY);
 			usedat.setDouble("posZ", e.posZ);
 			usedat.setByte("error", (byte)err);
-			ModNetwork.sendToNearPlayers(new ItemUseMessage(0,p.getEntityId(),usedat), e.posX, e.posY, e.posZ, e.worldObj);
+			ModNetwork.sendToNearPlayers(new ItemUseMessage(p.getEntityId(), hand ,usedat), e.posX, e.posY, e.posZ, e.worldObj);
 			if(!p.capabilities.isCreativeMode && err == 0) s.stackSize--;
 				
 			return true;
@@ -79,7 +78,7 @@ public class ItemCartRemoteModule extends Item implements ItemEntityInteract{
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public void onMPUsage(EntityPlayer p, NBTTagCompound data){
+	public void onMPUsage(EntityPlayer p, EnumHand hand, NBTTagCompound data){
 		World worldObj = p.worldObj;
 		double posX = data.getDouble("posX");
 		double posY = data.getDouble("posY");
@@ -87,17 +86,17 @@ public class ItemCartRemoteModule extends Item implements ItemEntityInteract{
 		byte error = data.getByte("error");
 		Random r = new Random();
 		if(error == 0){
-			p.swingItem();
+			p.swingArm(hand);
 			if(p.equals(Minecraft.getMinecraft().thePlayer))
-				p.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN+StatCollector.translateToLocal("chat."+OCMinecart.MODID+".moduleinstalled")));
+				p.addChatMessage(new TextComponentString(ChatFormatting.GREEN+ I18n.translateToLocal("chat."+OCMinecart.MODID+".moduleinstalled")));
 		}
-		else if(error == 1) p.addChatMessage(new ChatComponentText(EnumChatFormatting.RED+StatCollector.translateToLocal("chat."+OCMinecart.MODID+".invalidcart")));
-		else p.addChatMessage(new ChatComponentText(EnumChatFormatting.RED+StatCollector.translateToLocal("chat."+OCMinecart.MODID+".hasmodule")));
+		else if(error == 1) p.addChatMessage(new TextComponentString(ChatFormatting.RED+I18n.translateToLocal("chat."+OCMinecart.MODID+".invalidcart")));
+		else p.addChatMessage(new TextComponentString(ChatFormatting.RED+I18n.translateToLocal("chat."+OCMinecart.MODID+".hasmodule")));
 		for(int i=0;i<100;i++){
 			if(error == 0)
-				worldObj.spawnParticle("happyVillager", posX+(r.nextDouble()-0.5)*1.4, posY+(r.nextDouble()-0.5)*1.4, posZ+(r.nextDouble()-0.5)*1.4, 0, 0, 0);
+				worldObj.spawnParticle(EnumParticleTypes.VILLAGER_HAPPY, posX+(r.nextDouble()-0.5)*1.4, posY+(r.nextDouble()-0.5)*1.4, posZ+(r.nextDouble()-0.5)*1.4, 0, 0, 0);
 			else
-				worldObj.spawnParticle("smoke", posX+(r.nextDouble()-0.5)*1.4, posY-0.3, posZ+(r.nextDouble()-0.5)*1.4, 0, 0, 0);
+				worldObj.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, posX+(r.nextDouble()-0.5)*1.4, posY-0.3, posZ+(r.nextDouble()-0.5)*1.4, 0, 0, 0);
 		}
 	}
 	
@@ -119,41 +118,27 @@ public class ItemCartRemoteModule extends Item implements ItemEntityInteract{
 		}
 	}
 	
-	@SideOnly(Side.CLIENT)
-    public IIcon getIconFromDamage(int damage)
-    {
-       if(damage>2) return null;
-       return icons[damage];
-    }
-
-	@SideOnly(Side.CLIENT)
-    public void registerIcons(IIconRegister register){
-		for(int i=0;i<3;i+=1){
-			icons[i]=register.registerIcon(OCMinecart.MODID+":remotemodule"+(i+1));
-		}
-	}
-	
 	 public String getDisplayString(ItemStack stack,boolean hasColor){
-	    	EnumChatFormatting color;
+	    	ChatFormatting color;
 	    	String tier;
-	    	tier=StatCollector.translateToLocal("tooltip."+OCMinecart.MODID+".tier"+(stack.getItemDamage()+1));
+	    	tier=I18n.translateToLocal("tooltip."+OCMinecart.MODID+".tier"+(stack.getItemDamage()+1));
 	    	switch(stack.getItemDamage()){
 	    	case 0:
-	    		color = EnumChatFormatting.WHITE;
+	    		color = ChatFormatting.WHITE;
 	    		break;
 	    	case 1:
-	    		color = EnumChatFormatting.YELLOW;
+	    		color = ChatFormatting.YELLOW;
 	    		break;
 	    	case 2:
-	    		color = EnumChatFormatting.AQUA;
+	    		color = ChatFormatting.AQUA;
 	    		break;
 	    	default:
-	    		color = EnumChatFormatting.DARK_RED;
+	    		color = ChatFormatting.DARK_RED;
 	    		tier = "ERROR!";
 	    		break;
 	    	}
 	    	if(!hasColor){
-	    		color=EnumChatFormatting.RESET;
+	    		color=ChatFormatting.RESET;
 	    	}
 	    	return color+super.getItemStackDisplayName(stack)+" "+tier;
 	    }
@@ -165,15 +150,12 @@ public class ItemCartRemoteModule extends Item implements ItemEntityInteract{
 		
 		if(!Keyboard.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak.getKeyCode())){
 			String key = GameSettings.getKeyDisplayString(Minecraft.getMinecraft().gameSettings.keyBindSneak.getKeyCode());
-			String formkey = "[" + EnumChatFormatting.WHITE + key + EnumChatFormatting.GRAY + "]";
-			list.add(StatCollector.translateToLocalFormatted("tooltip."+OCMinecart.MODID+".moreinfo", formkey));
+			String formkey = "[" + ChatFormatting.WHITE + key + ChatFormatting.GRAY + "]";
+			list.add(I18n.translateToLocalFormatted("tooltip."+OCMinecart.MODID+".moreinfo", formkey));
 		}
 		else{
-			list.addAll(TooltipUtil.trimString(StatCollector.translateToLocal("tooltip."+OCMinecart.MODID+".remotemodule.desc")));
-			list.add("Max. Range: "+EnumChatFormatting.WHITE+getRangeByTier(stack.getItemDamage()));
-			list.add("Railcraft is "+(!Loader.isModLoaded("Railcraft")? 
-					EnumChatFormatting.RED+"not " : EnumChatFormatting.GREEN) +"avaiable");
+			list.addAll(TooltipUtil.trimString(I18n.translateToLocal("tooltip."+OCMinecart.MODID+".remotemodule.desc")));
+			list.add("Max. Range: "+ChatFormatting.WHITE+getRangeByTier(stack.getItemDamage()));
 		}
 	}
-	
 }

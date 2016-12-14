@@ -74,7 +74,7 @@ public class ComputerCartController implements ManagedEnvironment{
 	public Object[] setBrake(Context context, Arguments arguments){
 		boolean state = arguments.checkBoolean(0);
 		if(this.cart.getSpeed() > this.cart.getMaxCartSpeedOnRail() && state){
-			return new Object[]{this.cart.getBrakeState(), "too fast"};
+			return new Object[]{this.cart.getBrakeState(), "the "};
 		}
 		this.cart.setBrakeState(state);
 		return new Object[]{state, null};

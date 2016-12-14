@@ -1,25 +1,18 @@
 package mods.ocminecart.common.items;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import com.mojang.realmsclient.gui.ChatFormatting;
 import mods.ocminecart.OCMinecart;
-import net.minecraft.client.renderer.texture.IIconRegister;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.IIcon;
-import net.minecraft.util.StatCollector;
+import net.minecraft.util.text.translation.I18n;
 
 import java.util.List;
+import java.util.Map;
 
-public class ComputerCartCase extends Item{
-	
-	private IIcon t1case;
-	private IIcon t2case;
-	private IIcon t3case;
-	private IIcon t4case;
+public class ComputerCartCase extends Item implements ModItems.IItemModelRegister{
 	
 	ComputerCartCase(){
 		super();
@@ -27,27 +20,7 @@ public class ComputerCartCase extends Item{
 		this.setUnlocalizedName(OCMinecart.MODID+".computercartcase");
 		this.setMaxStackSize(1);
 	}
-	
-	@SideOnly(Side.CLIENT)
-    public IIcon getIconFromDamage(int damage)
-    {
-        switch(damage){
-        case 0: return t1case;
-        case 1: return t2case;
-        case 2: return t3case;
-        case 3: return t4case;
-        default: return null;
-        }
-    }
-	
-	@SideOnly(Side.CLIENT)
-    public void registerIcons(IIconRegister register){
-		t1case = register.registerIcon(OCMinecart.MODID+":computercartcase_1");
-		t2case = register.registerIcon(OCMinecart.MODID+":computercartcase_2");
-		t3case = register.registerIcon(OCMinecart.MODID+":computercartcase_3");
-		t4case = register.registerIcon(OCMinecart.MODID+":computercartcase_4");
-	}
-	
+
 	@Override
 	public void getSubItems(Item item, CreativeTabs tab, List list){
 		for(int i=0;i<=3;i+=1){
@@ -56,21 +29,29 @@ public class ComputerCartCase extends Item{
 	}
 	
 	public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean adv) {
-		EnumChatFormatting color = EnumChatFormatting.RESET;
+		ChatFormatting color = ChatFormatting.RESET;
 		switch(stack.getItemDamage()){
 		case 0:	//Tier 1
-			color = EnumChatFormatting.WHITE;
+			color = ChatFormatting.WHITE;
 			break;
 		case 1: //Tier 2
-			color = EnumChatFormatting.YELLOW;
+			color = ChatFormatting.YELLOW;
 			break;
 		case 2:  //Tier 3
-			color = EnumChatFormatting.AQUA;
+			color = ChatFormatting.AQUA;
 			break;
 		case 3: //Creative
-			color = EnumChatFormatting.LIGHT_PURPLE;
+			color = ChatFormatting.LIGHT_PURPLE;
 		}
 		list.clear();
-		list.add(color+this.getItemStackDisplayName(stack)+" "+StatCollector.translateToLocal("tooltip."+OCMinecart.MODID+".tier"+(stack.getItemDamage()+1)));
+		list.add(color+this.getItemStackDisplayName(stack)+" "+ I18n.translateToLocal("tooltip."+OCMinecart.MODID+".tier"+(stack.getItemDamage()+1)));
+	}
+
+	@Override
+	public void modelVariants(Map<Integer, ModelResourceLocation> models) {
+		models.put(0, new ModelResourceLocation(OCMinecart.MODID+":computercartcase_1","inventory"));
+		models.put(1, new ModelResourceLocation(OCMinecart.MODID+":computercartcase_2","inventory"));
+		models.put(2, new ModelResourceLocation(OCMinecart.MODID+":computercartcase_3","inventory"));
+		models.put(3, new ModelResourceLocation(OCMinecart.MODID+":computercartcase_4","inventory"));
 	}
 }

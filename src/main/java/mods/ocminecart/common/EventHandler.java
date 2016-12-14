@@ -4,19 +4,20 @@ import mods.ocminecart.Settings;
 import mods.ocminecart.client.SlotIcons;
 import mods.ocminecart.common.entityextend.RemoteExtenderRegister;
 import mods.ocminecart.common.items.interfaces.ItemEntityInteract;
-import mods.ocminecart.common.recipe.event.CraftingHandler;
 import mods.ocminecart.network.ModNetwork;
 import mods.ocminecart.network.message.ConfigSyncMessage;
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumHand;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -25,8 +26,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 
 public class EventHandler {
-	
-	int ticks=0; // 40 Server Ticks/sec but we want only 20 
 	
 	public static void initHandler(){
 		EventHandler handler = new EventHandler();
@@ -44,17 +43,17 @@ public class EventHandler {
 		ItemStack stack = event.getEntityPlayer().inventory.getCurrentItem();
 		if(stack!=null && stack.getItem() instanceof ItemEntityInteract){
 			if(((ItemEntityInteract) stack.getItem()).onEntityClick(event.getEntityPlayer(), event.getTarget(),
-					stack, ItemEntityInteract.Type.RIGHT_CLICK))
+					stack, ItemEntityInteract.Type.RIGHT_CLICK, event.getHand()))
 				event.setCanceled(true);
 		}
 	}
 	
 	@SubscribeEvent
 	public void onEntityHit(AttackEntityEvent event) {
-		ItemStack stack = event.entityPlayer.inventory.getCurrentItem();
+		ItemStack stack = event.getEntityPlayer().inventory.getCurrentItem();
 		if(stack!=null && stack.getItem() instanceof ItemEntityInteract){
-			if(((ItemEntityInteract) stack.getItem()).onEntityClick(event.entityPlayer, event.target,
-					stack, ItemEntityInteract.Type.LEFT_CLICK))
+			if(((ItemEntityInteract) stack.getItem()).onEntityClick(event.getEntityPlayer(), event.getTarget(),
+					stack, ItemEntityInteract.Type.LEFT_CLICK, EnumHand.MAIN_HAND))
 				event.setCanceled(true);
 		}
 	}
@@ -62,8 +61,8 @@ public class EventHandler {
 	@SubscribeEvent
 	public void onEntityConstructing(EntityConstructing event){
 		if(FMLCommonHandler.instance().getEffectiveSide().isClient()) return;
-		if(event.entity instanceof EntityMinecart){
-			RemoteExtenderRegister.addRemote((EntityMinecart) event.entity);
+		if(event.getEntity() instanceof EntityMinecart){
+			RemoteExtenderRegister.addRemote((EntityMinecart) event.getEntity());
 		}
 	}
 	

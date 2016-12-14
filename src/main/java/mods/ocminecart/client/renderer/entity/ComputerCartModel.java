@@ -44,7 +44,7 @@ public class ComputerCartModel extends ModelBase {
     	ComputerCart cart = (ComputerCart) entity;
     	byte rgb[] = ColorUtil.colorToRGB(cart.getLightColor());
     	GL11.glDisable(GL11.GL_LIGHTING);
-    	Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+    	Minecraft.getMinecraft().entityRenderer.disableLightmap();
     	GL11.glEnable(GL11.GL_BLEND);
     	GL11.glColor3d((double)(rgb[0] & 0xFF)/255D, (double)(rgb[1] & 0xFF)/255D, (double)(rgb[2] & 0xFF)/255D);
     }
@@ -52,7 +52,7 @@ public class ComputerCartModel extends ModelBase {
     Shape2.render(f);
     GL11.glEnable(GL11.GL_LIGHTING);
     GL11.glDisable(GL11.GL_BLEND);
-    Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
+    Minecraft.getMinecraft().entityRenderer.enableLightmap();
     GL11.glColor3d(1,1,1);
   }
   

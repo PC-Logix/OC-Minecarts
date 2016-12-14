@@ -24,7 +24,7 @@ public class NetworkRailBaseContainer extends Container {
 	}
 
 	public boolean canInteractWith(EntityPlayer player) {
-		return entity.isUseableByPlayer(player);
+		return entity.getWorld().equals(player.getEntityWorld()) && player.getDistanceSq(entity.getPos())<=256;
 	}
 	
 	private void addPlayerInv(int x,int y, InventoryPlayer inventory){

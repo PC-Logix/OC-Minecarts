@@ -1,8 +1,6 @@
 package mods.ocminecart.common.items;
 
-import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import com.mojang.realmsclient.gui.ChatFormatting;
 import li.cil.oc.api.API;
 import mods.ocminecart.OCMinecart;
 import mods.ocminecart.common.items.interfaces.IComponentInventoryItem;
@@ -18,10 +16,12 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.StatCollector;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
 
 import java.util.HashMap;
@@ -31,15 +31,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class ItemComputerCart extends MinecartItem implements IComponentInventoryItem{
-
-    private static final String __OBFID = "CL_00000049";
+	
     public static final int SLOT_ROM = 18;
     
     public ItemComputerCart()
     {
     	super();
         this.setUnlocalizedName(OCMinecart.MODID+".itemcomputercart");
-        this.setTextureName(OCMinecart.MODID+":computercartcase_1"); //random texture to prevent errors. You should not see this Icon because 3D Renderer.
         this.setHasSubtypes(true);
     }
     
@@ -90,7 +88,7 @@ public class ItemComputerCart extends MinecartItem implements IComponentInventor
     public boolean onItemUse(ItemStack stack, EntityPlayer player, World world, int xb, int yb, int zb, int p_77648_7_, float p_77648_8_, float p_77648_9_, float p_77648_10_){
     	if(!world.isRemote && getData(stack)==null){
     		player.inventory.setInventorySlotContents(player.inventory.currentItem , null);
-    		player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED+"Sorry! Removed the invalid item"));
+    		player.addChatMessage(new TextComponentString(ChatFormatting.RED+"Sorry! Removed the invalid item"));
     		return false;
     	}
     	else{
@@ -127,29 +125,29 @@ public class ItemComputerCart extends MinecartItem implements IComponentInventor
     }
     
     public String getDisplayString(ItemStack stack,boolean hasColor){
-    	EnumChatFormatting color;
+    	ChatFormatting color;
     	String tier;
     	ComputerCartData data = getData(stack);
-    	tier=StatCollector.translateToLocal("tooltip."+OCMinecart.MODID+".tier"+(data.getTier()+1));
+    	tier= I18n.translateToLocal("tooltip."+OCMinecart.MODID+".tier"+(data.getTier()+1));
     	switch((data!=null) ? data.getTier() : -1){
     	case 0:
-    		color = EnumChatFormatting.WHITE;
+    		color = ChatFormatting.WHITE;
     		break;
     	case 1:
-    		color = EnumChatFormatting.YELLOW;
+    		color = ChatFormatting.YELLOW;
     		break;
     	case 2:
-    		color = EnumChatFormatting.AQUA;
+    		color = ChatFormatting.AQUA;
     		break;
     	case 3:
-    		color = EnumChatFormatting.LIGHT_PURPLE;
+    		color = ChatFormatting.LIGHT_PURPLE;
     		break;
     	default:
-    		color = EnumChatFormatting.DARK_RED;
+    		color = ChatFormatting.DARK_RED;
     		tier = "ERROR!";
     		break;
     	}
-    	if(!hasColor) color = EnumChatFormatting.RESET;
+    	if(!hasColor) color = ChatFormatting.RESET;
     	return color+super.getItemStackDisplayName(stack)+" "+tier;
     }
     
@@ -164,26 +162,26 @@ public class ItemComputerCart extends MinecartItem implements IComponentInventor
     	
     	if(data==null) return ;
     	
-    	String eloc = StatCollector.translateToLocal("tooltip."+OCMinecart.MODID+".storedenergy");
-    	list.add(EnumChatFormatting.WHITE+eloc+": "+EnumChatFormatting.GREEN+String.format("%.0f", data.getEnergy()));
+    	String eloc = I18n.translateToLocal("tooltip."+OCMinecart.MODID+".storedenergy");
+    	list.add(ChatFormatting.WHITE+eloc+": "+ChatFormatting.GREEN+String.format("%.0f", data.getEnergy()));
     	
     	String emblemid = data.getEmblem();
     	if(emblemid!=null && emblemid!="" && Loader.isModLoaded("Railcraft"))
     	{
     		Emblem emblem = EmblemToolsClient.packageManager.getEmblem(emblemid);
     		if(emblem!=null){
-    			list.add(EnumChatFormatting.GOLD+StatCollector.translateToLocal("tooltip."+OCMinecart.MODID+".emblem")+
-    					EnumChatFormatting.WHITE+" "+emblem.displayName);
+    			list.add(ChatFormatting.GOLD+I18n.translateToLocal("tooltip."+OCMinecart.MODID+".emblem")+
+    					ChatFormatting.WHITE+" "+emblem.displayName);
     		}
     	}
     	
     	if(!Keyboard.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak.getKeyCode())){
     		String key = GameSettings.getKeyDisplayString(Minecraft.getMinecraft().gameSettings.keyBindSneak.getKeyCode());
-    		String formkey = "[" + EnumChatFormatting.WHITE + key + EnumChatFormatting.GRAY + "]";
-    		list.add(StatCollector.translateToLocalFormatted("tooltip."+OCMinecart.MODID+".viewcomponents", formkey));
+    		String formkey = "[" + ChatFormatting.WHITE + key + ChatFormatting.GRAY + "]";
+    		list.add(I18n.translateToLocalFormatted("tooltip."+OCMinecart.MODID+".viewcomponents", formkey));
     	}
     	else{
-    		list.add(StatCollector.translateToLocal("tooltip."+OCMinecart.MODID+".instcomponents")+":");
+    		list.add(I18n.translateToLocal("tooltip."+OCMinecart.MODID+".instcomponents")+":");
     		Iterator<Entry<Integer, ItemStack>> components = data.getComponents().entrySet().iterator();
     		while(components.hasNext()){
     			list.add("- "+components.next().getValue().getDisplayName());

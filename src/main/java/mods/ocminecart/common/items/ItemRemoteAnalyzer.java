@@ -1,7 +1,6 @@
 package mods.ocminecart.common.items;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import com.mojang.realmsclient.gui.ChatFormatting;
 import mods.ocminecart.OCMinecart;
 import mods.ocminecart.common.assemble.util.TooltipUtil;
 import mods.ocminecart.common.entityextend.RemoteExtenderRegister;
@@ -18,27 +17,28 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.StatCollector;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
 
 import java.util.List;
 
-public class ItemRemoteAnalyzer extends Item implements ItemEntityInteract{
+public class ItemRemoteAnalyzer extends Item implements ItemEntityInteract, ItemUseMessage.IMPUsageItem{
 	
 	public ItemRemoteAnalyzer(){
 		super();
 		this.setMaxStackSize(1);
-		this.setTextureName(OCMinecart.MODID+":remoteanalyzer");
 		this.setUnlocalizedName(OCMinecart.MODID+".remoteanalyzer");
 	}
 	
 	public boolean doesSneakBypassUse(World world, int x, int y, int z, EntityPlayer player){ return true; }
 	
 	//Called in the EventHandler
-	public boolean onEntityClick(EntityPlayer p, Entity e, ItemStack s, Type t){
+	public boolean onEntityClick(EntityPlayer p, Entity e, ItemStack s, Type t, EnumHand hand){
 		if(e instanceof EntityMinecart){
 			if(p.worldObj.isRemote) return true;
 			if(RemoteExtenderRegister.hasRemote((EntityMinecart) e) &&
@@ -48,7 +48,7 @@ public class ItemRemoteAnalyzer extends Item implements ItemEntityInteract{
 				
 					NBTTagCompound usedat = new NBTTagCompound();
 					usedat.setString("address", RemoteExtenderRegister.getExtender((EntityMinecart) e).getAddress());
-					ModNetwork.sendToNearPlayers(new ItemUseMessage(1,p.getEntityId(),usedat), e.posX, e.posY, e.posZ, e.worldObj);
+					ModNetwork.sendToNearPlayers(new ItemUseMessage(p.getEntityId(), hand,usedat), e.posX, e.posY, e.posZ, e.worldObj);
 				}
 				else if(t==Type.LEFT_CLICK){
 					if(RemoteExtenderRegister.getExtender((EntityMinecart) e).editableByPlayer(p,false))
@@ -56,41 +56,41 @@ public class ItemRemoteAnalyzer extends Item implements ItemEntityInteract{
 					else{
 						NBTTagCompound usedat = new NBTTagCompound();
 						usedat.setInteger("type", 1);
-						ModNetwork.channel.sendTo(new ItemUseMessage(1,p.getEntityId(),usedat), (EntityPlayerMP) p);
+						ModNetwork.channel.sendTo(new ItemUseMessage(p.getEntityId(), hand,usedat), (EntityPlayerMP) p);
 					}
 				}
 			}
 			else if(RemoteExtenderRegister.hasRemote((EntityMinecart) e))
-				p.addChatComponentMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE+"No Module found."));
+				p.addChatComponentMessage(new TextComponentString(ChatFormatting.LIGHT_PURPLE+"No Module found."));
 			else
-				p.addChatComponentMessage(new ChatComponentText(EnumChatFormatting.LIGHT_PURPLE+"No Module installable."));
+				p.addChatComponentMessage(new TextComponentString(ChatFormatting.LIGHT_PURPLE+"No Module installable."));
 			return true;
 		}
 		return false;
 	}
 	
 	@SideOnly(Side.CLIENT)
-	public void onMPUsage(EntityPlayer p, NBTTagCompound data){
+	public void onMPUsage(EntityPlayer p, EnumHand hand, NBTTagCompound data){
 		if(p!=Minecraft.getMinecraft().thePlayer) return;
 		if(data.hasKey("type") && data.getInteger("type")==1){
-			p.addChatComponentMessage(new ChatComponentText(EnumChatFormatting.RED+
-					StatCollector.translateToLocal("chat."+OCMinecart.MODID+".owneronly")));
+			p.addChatComponentMessage(new TextComponentString(ChatFormatting.RED+
+					I18n.translateToLocal("chat."+OCMinecart.MODID+".owneronly")));
 		}
 		else if(p.isSneaking() && Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)){
 			GuiScreen.setClipboardString(data.getString("address"));
-			p.addChatComponentMessage(new ChatComponentText(StatCollector.translateToLocal("chat."+OCMinecart.MODID+".clipboard")));
+			p.addChatComponentMessage(new TextComponentString(I18n.translateToLocal("chat."+OCMinecart.MODID+".clipboard")));
 		}
-		p.swingItem();
+		p.swingArm(hand);
 	}
 	
 	public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean adv) {
 		if(!Keyboard.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak.getKeyCode())){
 			String key = GameSettings.getKeyDisplayString(Minecraft.getMinecraft().gameSettings.keyBindSneak.getKeyCode());
-			String formkey = "[" + EnumChatFormatting.WHITE + key + EnumChatFormatting.GRAY + "]";
-			list.add(StatCollector.translateToLocalFormatted("tooltip."+OCMinecart.MODID+".moreinfo", formkey));
+			String formkey = "[" + ChatFormatting.WHITE + key + ChatFormatting.GRAY + "]";
+			list.add(I18n.translateToLocalFormatted("tooltip."+OCMinecart.MODID+".moreinfo", formkey));
 		}
 		else{
-			list.addAll(TooltipUtil.trimString(StatCollector.translateToLocal("tooltip."+OCMinecart.MODID+".remoteanalyzer.desc")));
+			list.addAll(TooltipUtil.trimString(I18n.translateToLocal("tooltip."+OCMinecart.MODID+".remoteanalyzer.desc")));
 		}
 	}
 }

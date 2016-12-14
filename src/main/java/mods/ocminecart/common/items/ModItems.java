@@ -1,8 +1,15 @@
 package mods.ocminecart.common.items;
 
-import cpw.mods.fml.common.registry.GameRegistry;
 import mods.ocminecart.OCMinecart;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
+import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.registry.GameRegistry;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ModItems {
 	
@@ -19,10 +26,28 @@ public class ModItems {
 		item_CartRemoteAnalyzer = new ItemRemoteAnalyzer().setCreativeTab(OCMinecart.itemGroup);
 		item_LinkingUpgrade = new ItemLinkingUpgrade().setCreativeTab(OCMinecart.itemGroup);
 		
-		GameRegistry.registerItem(item_ComputerCart,"itemcomputercart");
-		GameRegistry.registerItem(item_ComputerCartCase,"itemcomputercartcase");
-		GameRegistry.registerItem(item_CartRemoteModule,"itemcartremotemodule");
-		GameRegistry.registerItem(item_CartRemoteAnalyzer,"itemcartremoteanalyzer");
-		GameRegistry.registerItem(item_LinkingUpgrade,"linkingupgrade");
+		registerItem(item_ComputerCart,"itemcomputercart");
+		registerItem(item_ComputerCartCase,"itemcomputercartcase");
+		registerItem(item_CartRemoteModule,"itemcartremotemodule");
+		registerItem(item_CartRemoteAnalyzer,"itemcartremoteanalyzer");
+		registerItem(item_LinkingUpgrade,"linkingupgrade");
+	}
+
+	private static void registerItem(Item item, String id){
+		item.setRegistryName(OCMinecart.MODID, id);
+		GameRegistry.register(item);
+
+		if(FMLCommonHandler.instance().getEffectiveSide().isClient() && item instanceof IItemModelRegister){
+			Map<Integer, ModelResourceLocation> models = new HashMap<>();
+			((IItemModelRegister) item).modelVariants(models);
+			for(Map.Entry<Integer, ModelResourceLocation> entry : models.entrySet()){
+				ModelLoader.setCustomModelResourceLocation(item , entry.getKey(), entry.getValue());
+			}
+		}
+	}
+
+	public interface IItemModelRegister{
+
+		void modelVariants(Map<Integer, ModelResourceLocation> models);
 	}
 }

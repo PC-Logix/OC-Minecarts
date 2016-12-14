@@ -199,7 +199,7 @@ public abstract class RemoteCartExtender implements WirelessEndpoint, IExtendedE
 	public void update() {
 		if(this.world().isRemote) return;
 		boolean hasEntity = worldObj.loadedEntityList.contains(this.entity);
-		boolean chunkLoaded = worldObj.getChunkFromBlockCoords((int)entity.posX, (int)entity.posZ).isChunkLoaded;
+		boolean chunkLoaded = worldObj.getChunkFromBlockCoords(entity.getPosition()).isLoaded();
 		if(this.entity.isDead || this.entity.getDamage()>=this.getMaxModuleDamage()){
 			this.setEnabled(false, true);
 			if(this.entity.getDamage()>=this.getMaxModuleDamage()){

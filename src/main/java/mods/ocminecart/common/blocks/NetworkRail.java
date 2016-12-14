@@ -15,7 +15,7 @@ public class NetworkRail extends BlockRailBase implements INetRail{
 
 	public static final PropertyEnum<EnumRailDirection> SHAPE = PropertyEnum.<BlockRailBase.EnumRailDirection>create("shape", BlockRailBase.EnumRailDirection.class, (railDirection) -> railDirection != EnumRailDirection.NORTH_EAST && railDirection != EnumRailDirection.NORTH_WEST && railDirection != EnumRailDirection.SOUTH_EAST && railDirection != EnumRailDirection.SOUTH_WEST);
 
-	protected NetworkRail() {
+	public NetworkRail() {
 		super(false);
 		this.setUnlocalizedName(OCMinecart.MODID+".networkrail");
 		this.setHardness(0.7F);

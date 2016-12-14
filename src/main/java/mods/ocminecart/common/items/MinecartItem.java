@@ -22,7 +22,7 @@ public class MinecartItem extends Item{
         
         public ItemStack dispenseStack(IBlockSource iblock, ItemStack stack)
         {
-            EnumFacing enumfacing = BlockDispenser.func_149937_b(iblock.getBlockMetadata());
+            EnumFacing enumfacing = iblock.getWorld().getBlockState(iblock.getBlockPos()).getValue(BlockDispenser.FACING);
             World world = iblock.getWorld();
             double d0 = iblock.getX() + (double)((float)enumfacing.getFrontOffsetX() * 1.125F);
             double d1 = iblock.getY() + (double)((float)enumfacing.getFrontOffsetY() * 1.125F);
